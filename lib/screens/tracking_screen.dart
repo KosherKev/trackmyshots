@@ -1,8 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:trackmyshots/theme/app_theme.dart';
+import 'package:trackmyshots/services/app_state.dart';
+import 'package:trackmyshots/models/models.dart';
+import 'package:trackmyshots/widgets/vaccine_detail_modal.dart';
 
-class TrackingScreen extends StatelessWidget {
+class TrackingScreen extends StatefulWidget {
   const TrackingScreen({super.key});
+
+  @override
+  State<TrackingScreen> createState() => _TrackingScreenState();
+}
+
+class _TrackingScreenState extends State<TrackingScreen> {
+  DateTime selectedDate = DateTime.now();
+  int _currentIndex = 0; // Tracking tab
+
+  void _previousMonth() {
+    setState(() {
+      selectedDate = DateTime(selectedDate.year, selectedDate.month - 1);
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      selectedDate = DateTime(selectedDate.year, selectedDate.month + 1);
+    });
+  }
+
+  String _formatDate(DateTime date) {
+    final months = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+    return '${months[date.month - 1]} ${date.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,72 +52,124 @@ class TrackingScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTheme.paddingMedium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Immunization Schedule Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppTheme.paddingLarge),
-              decoration: BoxDecoration(
-                gradient: AppTheme.lightBlueGradient,
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-              ),
-              child: const Center(
-                child: Text(
-                  'Immunization\nSchedule',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+      body: Consumer<AppState>(
+        builder: (context, appState, child) {
+          final vaccines = appState.vaccines;
+          final upcomingDoses = appState.upcomingDoses;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(AppTheme.paddingMedium),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Immunization Schedule Header
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppTheme.paddingLarge),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.lightBlueGradient,
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Immunization\nSchedule',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${vaccines.length} vaccines tracked',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-            // Date Selector
-            _buildDateSelector(context),
-            const SizedBox(height: 24),
+                // Month Selector
+                _buildMonthSelector(context),
+                const SizedBox(height: 24),
 
-            // Featured Vaccine Card (Rotavirus)
-            _buildFeaturedVaccineCard(context),
-            const SizedBox(height: 24),
-
-            // Tracking Section
-            Text(
-              'Tracking',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                // Upcoming Doses Section
+                if (upcomingDoses.isNotEmpty) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Upcoming Doses',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // TODO: Show all upcoming doses
+                        },
+                        child: const Text('View All'),
+                      ),
+                    ],
                   ),
-            ),
-            const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  _buildUpcomingDosesList(upcomingDoses.take(3).toList()),
+                  const SizedBox(height: 24),
+                ],
 
-            // Progress Cards Grid
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.0,
-              children: [
-                _buildProgressCard('Hepatitis B', 100, AppTheme.progress100),
-                _buildProgressCard('DTP', 50, AppTheme.progress50),
-                _buildProgressCard('Hib', 80, AppTheme.progress80),
-                _buildProgressCard('PCV', 50, AppTheme.progress50),
+                // Tracking Progress Section
+                Text(
+                  'Vaccination Progress',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 16),
+
+                // Progress Cards Grid
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.0,
+                  children: vaccines.map((vaccine) {
+                    return _buildProgressCard(
+                      context,
+                      vaccine.name,
+                      vaccine.completionPercentage.toInt(),
+                      _getProgressColor(vaccine.completionPercentage),
+                      vaccine,
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 24),
+
+                // Vaccine List with Details
+                Text(
+                  'All Vaccines',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                ...vaccines.map((vaccine) => _buildVaccineListItem(context, vaccine)),
               ],
             ),
-          ],
-        ),
+          );
+        },
       ),
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
-  Widget _buildDateSelector(BuildContext context) {
+  Widget _buildMonthSelector(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.paddingLarge,
@@ -109,127 +191,223 @@ class TrackingScreen extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            onPressed: () {},
+            onPressed: _previousMonth,
           ),
-          const Text(
-            '20th May 2025',
-            style: TextStyle(
+          Text(
+            _formatDate(selectedDate),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
-            onPressed: () {},
+            onPressed: _nextMonth,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFeaturedVaccineCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingLarge),
-      decoration: BoxDecoration(
-        gradient: AppTheme.blueGradient,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.shadowColor,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  Widget _buildUpcomingDosesList(List<Map<String, dynamic>> upcomingDoses) {
+    return Column(
+      children: upcomingDoses.map((doseInfo) {
+        final vaccine = doseInfo['vaccine'] as Vaccine;
+        final dose = doseInfo['dose'] as VaccineDose;
+        final daysUntil = doseInfo['daysUntil'] as int;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(AppTheme.paddingMedium),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+            border: Border.all(
+              color: daysUntil < 0 
+                  ? AppTheme.error.withOpacity(0.3)
+                  : daysUntil <= 7
+                      ? AppTheme.warning.withOpacity(0.3)
+                      : AppTheme.info.withOpacity(0.3),
+              width: 2,
+            ),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Row(
             children: [
-              const Text(
-                'Rotavirus',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: daysUntil < 0
+                      ? AppTheme.error.withOpacity(0.1)
+                      : daysUntil <= 7
+                          ? AppTheme.warning.withOpacity(0.1)
+                          : AppTheme.info.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  daysUntil < 0 
+                      ? Icons.warning 
+                      : Icons.vaccines,
+                  color: daysUntil < 0
+                      ? AppTheme.error
+                      : daysUntil <= 7
+                          ? AppTheme.warning
+                          : AppTheme.info,
                 ),
               ),
-              TextButton(
-                onPressed: () {},
-                child: const Row(
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Analytics',
-                      style: TextStyle(color: Colors.white),
+                      '${vaccine.name} - Dose ${dose.doseNumber}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
-                    SizedBox(width: 4),
-                    Icon(Icons.chevron_right, color: Colors.white, size: 20),
+                    const SizedBox(height: 4),
+                    Text(
+                      dose.scheduledDate != null
+                          ? 'Scheduled: ${_formatScheduledDate(dose.scheduledDate!)}'
+                          : 'Not scheduled',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
                   ],
                 ),
               ),
+              if (daysUntil < 0)
+                Chip(
+                  label: const Text(
+                    'Overdue',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  backgroundColor: AppTheme.error,
+                )
+              else if (daysUntil <= 7)
+                Chip(
+                  label: Text(
+                    '$daysUntil days',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  backgroundColor: AppTheme.warning,
+                )
+              else
+                Chip(
+                  label: Text(
+                    '${(daysUntil / 7).ceil()} weeks',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  backgroundColor: AppTheme.info.withOpacity(0.2),
+                ),
             ],
           ),
-          const SizedBox(height: 16),
+        );
+      }).toList(),
+    );
+  }
 
-          // Progress Bar
-          Stack(
-            children: [
-              Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(20),
-                ),
+  String _formatScheduledDate(DateTime date) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Color _getProgressColor(double percentage) {
+    if (percentage == 100) return AppTheme.progress100;
+    if (percentage >= 75) return AppTheme.progress80;
+    if (percentage >= 50) return AppTheme.progress50;
+    return AppTheme.warning;
+  }
+
+  Widget _buildProgressCard(
+    BuildContext context,
+    String vaccineName,
+    int percentage,
+    Color color,
+    Vaccine vaccine,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        showVaccineDetailModal(context, vaccine);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.paddingMedium),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryBlue,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.shadowColor,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              vaccineName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
-              FractionallySizedBox(
-                widthFactor: 0.25, // 25% progress
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 70,
+                  height: 70,
+                  child: CircularProgressIndicator(
+                    value: percentage / 100,
+                    strokeWidth: 6,
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Progress Labels
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '0',
-                style: TextStyle(color: Colors.white70),
-              ),
-              Text(
-                '100',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Dosage Info
-          const Text(
-            'Rotarix – given in 2 doses (at 6 and 10 weeks of age)',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$percentage%',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${vaccine.completedDoses}/${vaccine.totalDoses}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildProgressCard(String vaccineName, int percentage, Color color) {
+  Widget _buildVaccineListItem(BuildContext context, Vaccine vaccine) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingMedium),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppTheme.primaryBlue,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
         boxShadow: [
           BoxShadow(
@@ -239,40 +417,165 @@ class TrackingScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            vaccineName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            showVaccineDetailModal(context, vaccine);
+          },
+          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.paddingMedium),
+            child: Row(
+              children: [
+                // Vaccine Icon/Letter
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: _getProgressColor(vaccine.completionPercentage)
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      vaccine.shortName,
+                      style: TextStyle(
+                        color: _getProgressColor(vaccine.completionPercentage),
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Vaccine Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        vaccine.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${vaccine.completedDoses} of ${vaccine.totalDoses} doses completed',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Progress bar
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: vaccine.completionPercentage / 100,
+                          backgroundColor: Colors.grey[200],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _getProgressColor(vaccine.completionPercentage),
+                          ),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Status Icon
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: vaccine.isCompleted
+                        ? AppTheme.success.withOpacity(0.1)
+                        : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    vaccine.isCompleted ? Icons.check_circle : Icons.arrow_forward_ios,
+                    color: vaccine.isCompleted ? AppTheme.success : Colors.grey[400],
+                    size: 20,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 80,
-                height: 80,
-                child: CircularProgressIndicator(
-                  value: percentage / 100,
-                  strokeWidth: 8,
-                  backgroundColor: Colors.white.withOpacity(0.3),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-              Text(
-                '$percentage%',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+        ),
+      ),
+    );
+  }
+
+  void showVaccineDetailModal(BuildContext context, Vaccine vaccine) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => VaccineDetailModal(vaccine: vaccine),
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.primaryDark,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          switch (index) {
+            case 0:
+              // Already on tracking
+              break;
+            case 1:
+              Navigator.pushNamed(context, '/profile');
+              break;
+            case 2:
+              Navigator.pushNamed(context, '/home');
+              break;
+            case 3:
+              Navigator.pushNamed(context, '/educational');
+              break;
+            case 4:
+              Navigator.pushNamed(context, '/reminders');
+              break;
+          }
+        },
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white60,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.track_changes),
+            label: 'Tracking',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Profile',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.medical_services_outlined),
+            label: 'Resources',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment_outlined),
+            label: 'Notes',
           ),
         ],
       ),

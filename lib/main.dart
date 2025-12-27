@@ -14,7 +14,7 @@ import 'package:trackmyshots/screens/progress_feedback_screen.dart';
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (context) => AppState()..loadSampleData(),
+      create: (context) => AppState()..initialize(),
       child: const TrackMyShotsApp(),
     ),
   );
