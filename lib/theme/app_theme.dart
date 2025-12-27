@@ -28,7 +28,8 @@ class AppTheme {
   // Text Colors
   static const Color textPrimary = Color(0xFF1A1A1A);
   static const Color textSecondary = Color(0xFF757575);
-  static const Color textLight = Color(0xFFFFFFFF);  
+  static const Color textLight = Color(0xFFFFFFFF);
+  
   // Status Colors
   static const Color success = Color(0xFF4CAF50);
   static const Color warning = Color(0xFFFFA726);
@@ -59,7 +60,8 @@ class AppTheme {
       onBackground: textPrimary,
       onError: textLight,
     ),
-    scaffoldBackgroundColor: backgroundLight,    
+    scaffoldBackgroundColor: backgroundLight,
+    
     // AppBar Theme
     appBarTheme: const AppBarTheme(
       backgroundColor: backgroundLight,
@@ -73,16 +75,6 @@ class AppTheme {
       ),
     ),
     
-    // Card Theme
-    cardTheme: CardTheme(
-      color: cardBackground,
-      elevation: 2,
-      shadowColor: shadowColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
-    
     // Bottom Navigation Bar Theme
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: primaryDark,
@@ -90,7 +82,8 @@ class AppTheme {
       unselectedItemColor: Color(0xFF7A9CB8),
       type: BottomNavigationBarType.fixed,
       elevation: 8,
-    ),    
+    ),
+    
     // Text Theme
     textTheme: const TextTheme(
       // Headlines
@@ -125,7 +118,8 @@ class AppTheme {
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: textPrimary,
-      ),      
+      ),
+      
       // Body
       bodyLarge: TextStyle(
         fontSize: 16,
@@ -159,7 +153,8 @@ class AppTheme {
         fontWeight: FontWeight.w500,
         color: textSecondary,
       ),
-    ),    
+    ),
+    
     // Elevated Button Theme
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -192,7 +187,8 @@ class AppTheme {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: primaryBlue, width: 2),
-      ),      errorBorder: OutlineInputBorder(
+      ),
+      errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: error),
       ),

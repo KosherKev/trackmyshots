@@ -46,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
             ),
             const SizedBox(height: 24),
+
             // Search Bar (Placeholder)
             Container(
               padding: const EdgeInsets.symmetric(
@@ -80,6 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 32),
+
             // Upcoming Appointment Section
             Text(
               'Upcoming Appointment',
@@ -176,7 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
-                  ),                  decoration: BoxDecoration(
+                  ),
+                  decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -281,7 +284,8 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.medical_services_outlined),
             label: 'Resources',
-          ),          BottomNavigationBarItem(
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.assignment_outlined),
             label: 'Notes',
           ),
