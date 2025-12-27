@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:trackmyshots/theme/app_theme.dart';
+import 'package:trackmyshots/services/app_state.dart';
 import 'package:trackmyshots/screens/splash_screen.dart';
 import 'package:trackmyshots/screens/home_screen.dart';
 import 'package:trackmyshots/screens/tracking_screen.dart';
@@ -10,7 +12,12 @@ import 'package:trackmyshots/screens/multilingual_screen.dart';
 import 'package:trackmyshots/screens/progress_feedback_screen.dart';
 
 void main() {
-  runApp(const TrackMyShotsApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => AppState()..loadSampleData(),
+      child: const TrackMyShotsApp(),
+    ),
+  );
 }
 
 class TrackMyShotsApp extends StatelessWidget {
