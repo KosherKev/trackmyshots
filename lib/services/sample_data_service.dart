@@ -452,7 +452,10 @@ class SampleDataService {
         type: AppointmentType.vaccination,
         status: AppointmentStatus.confirmed,
         notes: 'Bring vaccination card',
-        relatedVaccineIds: ['rotavirus', 'pcv'],
+        linkedVaccines: [
+          VaccineLink(vaccineId: 'rotavirus', doseId: 'rotavirus_2'),
+          VaccineLink(vaccineId: 'pcv', doseId: 'pcv_2'),
+        ],
       ),
       
       // Past appointment

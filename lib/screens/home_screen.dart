@@ -5,6 +5,7 @@ import 'package:trackmyshots/services/app_state.dart';
 import 'package:trackmyshots/services/notification_service.dart';
 import 'package:trackmyshots/models/models.dart';
 import 'package:trackmyshots/screens/appointment_detail_screen.dart';
+import 'package:trackmyshots/screens/add_edit_appointment_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

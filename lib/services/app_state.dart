@@ -125,6 +125,7 @@ class AppState extends ChangeNotifier {
   Future<void> updateVaccineDose(String vaccineId, String doseId, {
     bool? isAdministered,
     DateTime? administeredDate,
+    DateTime? scheduledDate,
     String? notes,
     String? batchNumber,
     String? administeredBy,
@@ -140,6 +141,7 @@ class AppState extends ChangeNotifier {
     final updatedDose = currentDose.copyWith(
       isAdministered: isAdministered,
       administeredDate: administeredDate,
+      scheduledDate: scheduledDate,
       notes: notes,
       batchNumber: batchNumber,
       administeredBy: administeredBy,

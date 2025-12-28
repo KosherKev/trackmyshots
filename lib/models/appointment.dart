@@ -1,3 +1,71 @@
+class VaccineLink {
+  final String vaccineId;
+  final String doseId; // Changed from doseNumber to doseId for better mapping
+  final bool wasAdministered;
+  final String? notGivenReason;
+
+  VaccineLink({
+    required this.vaccineId,
+    required this.doseId,
+    this.wasAdministered = false,
+    this.notGivenReason,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'vaccineId': vaccineId,
+      'doseId': doseId,
+      'wasAdministered': wasAdministered,
+      'notGivenReason': notGivenReason,
+    };
+  }
+
+  factory VaccineLink.fromJson(Map<String, dynamic> json) {
+    return VaccineLink(
+      vaccineId: json['vaccineId'] as String,
+      doseId: json['doseId'] as String,
+      wasAdministered: json['wasAdministered'] as bool? ?? false,
+      notGivenReason: json['notGivenReason'] as String?,
+    );
+  }
+}
+
+class AppointmentFulfillment {
+  final bool wasKept;
+  final DateTime? actualDateTime;
+  final String? notes;
+  final List<VaccineLink> vaccineLinks; // Snapshot of what happened
+
+  AppointmentFulfillment({
+    required this.wasKept,
+    this.actualDateTime,
+    this.notes,
+    this.vaccineLinks = const [],
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'wasKept': wasKept,
+      'actualDateTime': actualDateTime?.toIso8601String(),
+      'notes': notes,
+      'vaccineLinks': vaccineLinks.map((l) => l.toJson()).toList(),
+    };
+  }
+
+  factory AppointmentFulfillment.fromJson(Map<String, dynamic> json) {
+    return AppointmentFulfillment(
+      wasKept: json['wasKept'] as bool,
+      actualDateTime: json['actualDateTime'] != null 
+          ? DateTime.parse(json['actualDateTime'] as String) 
+          : null,
+      notes: json['notes'] as String?,
+      vaccineLinks: (json['vaccineLinks'] as List?)
+          ?.map((e) => VaccineLink.fromJson(e as Map<String, dynamic>))
+          .toList() ?? const [],
+    );
+  }
+}
+
 class Appointment {
   final String id;
   final String doctorName;
@@ -9,7 +77,8 @@ class Appointment {
   final AppointmentType type;
   final AppointmentStatus status;
   final String? notes;
-  final List<String> relatedVaccineIds;
+  final List<VaccineLink> linkedVaccines;
+  final AppointmentFulfillment? fulfillment;
 
   Appointment({
     required this.id,
@@ -22,7 +91,8 @@ class Appointment {
     required this.type,
     this.status = AppointmentStatus.scheduled,
     this.notes,
-    this.relatedVaccineIds = const [],
+    this.linkedVaccines = const [],
+    this.fulfillment,
   });
 
   DateTime get endTime => dateTime.add(duration);
@@ -69,7 +139,8 @@ class Appointment {
     AppointmentType? type,
     AppointmentStatus? status,
     String? notes,
-    List<String>? relatedVaccineIds,
+    List<VaccineLink>? linkedVaccines,
+    AppointmentFulfillment? fulfillment,
   }) {
     return Appointment(
       id: id ?? this.id,
@@ -82,11 +153,25 @@ class Appointment {
       type: type ?? this.type,
       status: status ?? this.status,
       notes: notes ?? this.notes,
-      relatedVaccineIds: relatedVaccineIds ?? this.relatedVaccineIds,
+      linkedVaccines: linkedVaccines ?? this.linkedVaccines,
+      fulfillment: fulfillment ?? this.fulfillment,
     );
   }
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
+    // Handle legacy relatedVaccineIds if present and linkedVaccines is missing
+    List<VaccineLink> links = [];
+    if (json['linkedVaccines'] != null) {
+      links = (json['linkedVaccines'] as List)
+          .map((e) => VaccineLink.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else if (json['relatedVaccineIds'] != null) {
+      // Migration for legacy data
+      links = (json['relatedVaccineIds'] as List)
+          .map((id) => VaccineLink(vaccineId: id as String, doseId: 'unknown'))
+          .toList();
+    }
+
     return Appointment(
       id: json['id'] as String,
       doctorName: json['doctorName'] as String,
@@ -104,10 +189,10 @@ class Appointment {
         orElse: () => AppointmentStatus.scheduled,
       ),
       notes: json['notes'] as String?,
-      relatedVaccineIds: (json['relatedVaccineIds'] as List?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
+      linkedVaccines: links,
+      fulfillment: json['fulfillment'] != null
+          ? AppointmentFulfillment.fromJson(json['fulfillment'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -123,7 +208,8 @@ class Appointment {
       'type': type.toString().split('.').last,
       'status': status.toString().split('.').last,
       'notes': notes,
-      'relatedVaccineIds': relatedVaccineIds,
+      'linkedVaccines': linkedVaccines.map((l) => l.toJson()).toList(),
+      'fulfillment': fulfillment?.toJson(),
     };
   }
 }
