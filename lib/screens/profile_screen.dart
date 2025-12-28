@@ -335,6 +335,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const Divider(height: 1, indent: 56),
           ListTile(
+            leading: const Icon(Icons.security, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Permissions',
+              style: TextStyle(fontSize: 16),
+            ),
+            subtitle: const Text(
+              'Manage app permissions',
+              style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+            onTap: () {
+              Navigator.pushNamed(context, '/permissions');
+            },
+          ),
+          const Divider(height: 1, indent: 56),
+          ListTile(
             leading: const Icon(Icons.language, color: Color(0xFF0066B3)),
             title: const Text(
               'Language',
@@ -492,6 +508,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   builder: (context) => const SupportScreen(type: SupportPageType.terms),
                 ),
               );
+            },
+          ),
+          const Divider(height: 1, indent: 56),
+          ListTile(
+            leading: const Icon(Icons.warning_amber_rounded, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Medical Disclaimer',
+              style: TextStyle(fontSize: 16),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+            onTap: () {
+              Navigator.pushNamed(context, '/medical-disclaimer');
             },
           ),
           const Divider(height: 1, indent: 56),

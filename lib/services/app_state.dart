@@ -240,11 +240,64 @@ class AppState extends ChangeNotifier {
     updatedDoses[doseIndex] = updatedDose;
 
     final updatedVaccine = vaccine.copyWith(doses: updatedDoses);
-    _vaccines[vaccineIndex] = updatedVaccine;
+
+    // Check for cascading updates if administered
+    if (isAdministered == true && administeredDate != null) {
+      final cascadedVaccine = _cascadeScheduleUpdates(updatedVaccine, doseIndex, administeredDate);
+      _vaccines[vaccineIndex] = cascadedVaccine;
+    } else {
+      _vaccines[vaccineIndex] = updatedVaccine;
+    }
 
     notifyListeners();
     await _storage.saveVaccines(_vaccines, childId: _selectedChildId);
     await refreshReminders();
+  }
+
+  // Helper to cascade schedule updates
+  Vaccine _cascadeScheduleUpdates(Vaccine vaccine, int administeredDoseIndex, DateTime administeredDate) {
+    var updatedDoses = List<VaccineDose>.from(vaccine.doses);
+    
+    // We start checking from the next dose
+    DateTime lastDate = administeredDate;
+    
+    for (int i = administeredDoseIndex + 1; i < updatedDoses.length; i++) {
+      final currentDose = updatedDoses[i];
+      final previousDose = updatedDoses[i - 1]; // This is safe because we start at index + 1
+      
+      // Calculate the minimum interval in weeks based on the standard schedule
+      // We assume the standard gap is the difference in 'ageInWeeks'
+      final int minIntervalWeeks = currentDose.ageInWeeks - previousDose.ageInWeeks;
+      
+      // If minInterval is 0 or negative (shouldn't happen in standard schedule), default to 4 weeks
+      final int effectiveIntervalWeeks = minIntervalWeeks > 0 ? minIntervalWeeks : 4;
+      
+      // Calculate the minimum allowed date for this dose
+      final minScheduledDate = lastDate.add(Duration(days: effectiveIntervalWeeks * 7));
+      
+      // If the current scheduled date is BEFORE the minimum allowed date, shift it
+      // Or if it's already administered, we don't change it (historical record)
+      if (!currentDose.isAdministered) {
+        if (currentDose.scheduledDate == null || currentDose.scheduledDate!.isBefore(minScheduledDate)) {
+          // Shift the schedule
+          updatedDoses[i] = currentDose.copyWith(
+            scheduledDate: minScheduledDate,
+            notes: (currentDose.notes ?? '') + '\n[Auto-Rescheduled due to late previous dose]',
+          );
+        }
+      }
+      
+      // Update lastDate for the next iteration
+      // If this dose is already administered, use its administered date
+      // If not, use its (potentially new) scheduled date
+      if (updatedDoses[i].isAdministered && updatedDoses[i].administeredDate != null) {
+        lastDate = updatedDoses[i].administeredDate!;
+      } else if (updatedDoses[i].scheduledDate != null) {
+        lastDate = updatedDoses[i].scheduledDate!;
+      }
+    }
+    
+    return vaccine.copyWith(doses: updatedDoses);
   }
 
   // Batch update doses (e.g. from Schedule Confirmation)
