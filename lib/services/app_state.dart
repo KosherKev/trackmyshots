@@ -8,14 +8,28 @@ class AppState extends ChangeNotifier {
   final StorageService _storage = StorageService();
   final NotificationService _notificationService = NotificationService();
   
-  ChildProfile? _currentChild;
+  List<ChildProfile> _children = [];
+  String? _selectedChildId;
   List<Vaccine> _vaccines = [];
   List<Appointment> _appointments = [];
   bool _notificationsEnabled = true;
   bool _isLoading = false;
 
   // Getters
-  ChildProfile? get currentChild => _currentChild;
+  List<ChildProfile> get children => _children;
+  String? get selectedChildId => _selectedChildId;
+  
+  ChildProfile? get currentChild {
+    if (_selectedChildId == null || _children.isEmpty) return null;
+    try {
+      return _children.firstWhere((c) => c.id == _selectedChildId);
+    } catch (e) {
+      return _children.isNotEmpty ? _children.first : null;
+    }
+  }
+
+  bool get hasChildren => _children.isNotEmpty;
+
   List<Vaccine> get vaccines => _vaccines;
   List<Appointment> get appointments => _appointments;
   bool get notificationsEnabled => _notificationsEnabled;
@@ -44,8 +58,9 @@ class AppState extends ChangeNotifier {
 
   // Get upcoming doses
   List<Map<String, dynamic>> get upcomingDoses {
-    if (_currentChild == null) return [];
-    return SampleDataService.getUpcomingDoses(_vaccines, _currentChild!);
+    final child = currentChild;
+    if (child == null) return [];
+    return SampleDataService.getUpcomingDoses(_vaccines, child);
   }
 
   // Get overall completion percentage
@@ -81,44 +96,116 @@ class AppState extends ChangeNotifier {
 
     try {
       await _notificationService.initialize();
-      final hasData = await _storage.hasData();
       
-      if (hasData) {
-        await _loadFromStorage();
+      // 1. Load all children
+      _children = await _storage.loadChildren();
+      
+      // 2. Check for legacy single-child data if no children found
+      if (_children.isEmpty) {
+        final legacyChild = await _storage.loadChildProfile();
+        if (legacyChild != null) {
+          print('Migrating legacy child profile...');
+          // Migrate legacy child
+          _children.add(legacyChild);
+          await _storage.saveChildren(_children);
+          
+          // Migrate legacy vaccines/appointments to child-scoped storage
+          final legacyVaccines = await _storage.loadVaccines(); // Loads from _keyVaccines
+          if (legacyVaccines != null) {
+            await _storage.saveVaccines(legacyVaccines, childId: legacyChild.id);
+          }
+          
+          final legacyAppointments = await _storage.loadAppointments(); // Loads from _keyAppointments
+          if (legacyAppointments != null) {
+            await _storage.saveAppointments(legacyAppointments, childId: legacyChild.id);
+          }
+          
+          // Set selection
+          _selectedChildId = legacyChild.id;
+          await _storage.saveSelectedChildId(_selectedChildId);
+          
+          // Clear legacy keys to finish migration
+          await _storage.clearLegacyData();
+        }
       } else {
-        // Do NOT load sample data automatically for production flow
-        // The UI will detect _currentChild == null and show onboarding
-        // loadSampleData(); // Commented out for real flow
-        // await _saveToStorage();
+        // 3. Load selection
+        _selectedChildId = await _storage.loadSelectedChildId();
+        
+        // Auto-select first child if selection is invalid/missing
+        if (_selectedChildId == null && _children.isNotEmpty) {
+          _selectedChildId = _children.first.id;
+          await _storage.saveSelectedChildId(_selectedChildId);
+        }
       }
+
+      // 4. Load data for the selected child
+      if (_selectedChildId != null) {
+        await _loadChildData(_selectedChildId!);
+      }
+      
     } catch (e) {
       print('Error initializing app: $e');
-      // On error, maybe we should safe fail, but for now let's just leave it empty
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Complete onboarding
+  // Load vaccines and appointments for a specific child
+  Future<void> _loadChildData(String childId) async {
+    _vaccines = await _storage.loadVaccines(childId: childId) ?? [];
+    _appointments = await _storage.loadAppointments(childId: childId) ?? [];
+    
+    // Safety check: if vaccines are empty for a child (e.g. fresh migration failure or corruption),
+    // regenerate them from sample data.
+    if (_vaccines.isEmpty) {
+       final child = _children.firstWhere((c) => c.id == childId);
+       _vaccines = SampleDataService.generateScheduleForChild(child);
+       await _storage.saveVaccines(_vaccines, childId: childId);
+    }
+  }
+
+  // Add a new child (Onboarding or Settings)
+  Future<void> addChild(ChildProfile child) async {
+    _children.add(child);
+    await _storage.saveChildren(_children);
+    
+    // Generate initial schedule
+    final initialVaccines = SampleDataService.generateScheduleForChild(child);
+    await _storage.saveVaccines(initialVaccines, childId: child.id);
+    await _storage.saveAppointments([], childId: child.id); // Empty appointments
+    
+    // Switch to new child
+    await selectChild(child.id);
+  }
+
+  // Switch active child
+  Future<void> selectChild(String childId) async {
+    if (_selectedChildId == childId) return;
+    
+    _isLoading = true;
+    notifyListeners();
+    
+    _selectedChildId = childId;
+    await _storage.saveSelectedChildId(childId);
+    await _loadChildData(childId);
+    
+    _isLoading = false;
+    notifyListeners();
+    
+    // Refresh notifications for the new child context
+    await refreshReminders(); 
+  }
+
+  // Complete onboarding (Legacy method signature kept for compatibility, adapted behavior)
   Future<void> completeOnboarding(ChildProfile child) async {
-    _currentChild = child;
-    
-    // Generate vaccine schedule based on child's age
-    // For now, we reuse the sample data logic but this should ideally be a dedicated generator
-    _vaccines = SampleDataService.generateScheduleForChild(child);
-    
-    // Initialize empty appointments
-    _appointments = [];
+    // In multi-profile, this is essentially adding the first child
+    await addChild(child);
     
     if (_notificationsEnabled) {
-      // Request permissions first time
       await _notificationService.requestPermissions();
       await refreshReminders();
     }
-    
-    notifyListeners();
-    await _saveToStorage();
   }
 
   // Update a specific vaccine dose
@@ -130,6 +217,8 @@ class AppState extends ChangeNotifier {
     String? batchNumber,
     String? administeredBy,
   }) async {
+    if (_selectedChildId == null) return;
+    
     final vaccineIndex = _vaccines.indexWhere((v) => v.id == vaccineId);
     if (vaccineIndex == -1) return;
 
@@ -154,12 +243,14 @@ class AppState extends ChangeNotifier {
     _vaccines[vaccineIndex] = updatedVaccine;
 
     notifyListeners();
-    await _storage.saveVaccines(_vaccines);
+    await _storage.saveVaccines(_vaccines, childId: _selectedChildId);
     await refreshReminders();
   }
 
   // Batch update doses (e.g. from Schedule Confirmation)
   Future<void> batchUpdateDoses(List<Map<String, dynamic>> updates) async {
+    if (_selectedChildId == null) return;
+    
     bool hasChanges = false;
 
     for (final update in updates) {
@@ -189,80 +280,61 @@ class AppState extends ChangeNotifier {
 
     if (hasChanges) {
       notifyListeners();
-      await _storage.saveVaccines(_vaccines);
+      await _storage.saveVaccines(_vaccines, childId: _selectedChildId);
       await refreshReminders();
     }
   }
 
-  // Load from storage
+  // Load from storage (Internal helper, kept for structure but mostly handled in initialize now)
   Future<void> _loadFromStorage() async {
-    final child = await _storage.loadChildProfile();
-    final vaccines = await _storage.loadVaccines();
-    final appointments = await _storage.loadAppointments();
-    final settings = await _storage.loadSettings();
-
-    if (child != null) _currentChild = child;
-    if (vaccines != null) _vaccines = vaccines;
-    if (appointments != null) _appointments = appointments;
-    if (settings != null) {
-      _notificationsEnabled = settings['notificationsEnabled'] ?? true;
-    }
-
-    notifyListeners();
+    // This is now redundant given initialize() logic, but kept empty or logic moved
+    // Logic moved to initialize()
   }
 
   // Save to storage
   Future<void> _saveToStorage() async {
-    if (_currentChild != null) {
-      await _storage.saveChildProfile(_currentChild!);
+    if (_selectedChildId != null) {
+      await _storage.saveVaccines(_vaccines, childId: _selectedChildId);
+      await _storage.saveAppointments(_appointments, childId: _selectedChildId);
     }
-    await _storage.saveVaccines(_vaccines);
-    await _storage.saveAppointments(_appointments);
-    await _storage.saveSettings({
-      'notificationsEnabled': _notificationsEnabled,
-    });
-  }
-
-  // Initialize with sample data
-  void loadSampleData() {
-    _currentChild = SampleDataService.getSampleChild();
-    _vaccines = SampleDataService.getVaccinesForChild(_currentChild!);
-    _appointments = SampleDataService.getSampleAppointments();
-    notifyListeners();
   }
 
   // Update child profile
   Future<void> updateChildProfile(ChildProfile child) async {
-    _currentChild = child;
-    notifyListeners();
-    await _storage.saveChildProfile(child);
+    final index = _children.indexWhere((c) => c.id == child.id);
+    if (index >= 0) {
+      _children[index] = child;
+      await _storage.saveChildren(_children);
+      notifyListeners();
+    }
   }
-
-
 
   // Add appointment
   Future<void> addAppointment(Appointment appointment) async {
+    if (_selectedChildId == null) return;
     _appointments.add(appointment);
     notifyListeners();
-    await _storage.saveAppointments(_appointments);
+    await _storage.saveAppointments(_appointments, childId: _selectedChildId);
     await refreshReminders();
   }
 
   // Update appointment
   Future<void> updateAppointment(Appointment appointment) async {
+    if (_selectedChildId == null) return;
     final index = _appointments.indexWhere((a) => a.id == appointment.id);
     if (index != -1) {
       _appointments[index] = appointment;
       notifyListeners();
-      await _storage.saveAppointments(_appointments);
+      await _storage.saveAppointments(_appointments, childId: _selectedChildId);
     }
   }
 
   // Delete appointment
   Future<void> deleteAppointment(String appointmentId) async {
+    if (_selectedChildId == null) return;
     _appointments.removeWhere((a) => a.id == appointmentId);
     notifyListeners();
-    await _storage.saveAppointments(_appointments);
+    await _storage.saveAppointments(_appointments, childId: _selectedChildId);
     await refreshReminders();
   }
 
@@ -273,6 +345,11 @@ class AppState extends ChangeNotifier {
     await _storage.saveSettings({
       'notificationsEnabled': enabled,
     });
+    if (enabled) {
+      await refreshReminders();
+    } else {
+      await _notificationService.cancelAllNotifications();
+    }
   }
 
   // Get vaccine by ID
@@ -302,22 +379,27 @@ class AppState extends ChangeNotifier {
   Future<bool> importData(String jsonString) async {
     final success = await _storage.importData(jsonString);
     if (success) {
-      await _loadFromStorage();
+      await initialize(); // Re-initialize to reload data
     }
     return success;
   }
 
-  // Reset to sample data
+  // Reset to sample data (Debug only)
   Future<void> resetToSampleData() async {
     await _storage.clearAllData();
-    loadSampleData();
-    await _saveToStorage();
+    // Re-initialize effectively
+    _children = [];
+    _selectedChildId = null;
+    _vaccines = [];
+    _appointments = [];
+    notifyListeners();
   }
 
   // Clear all data
   Future<void> clearAllData() async {
     await _storage.clearAllData();
-    _currentChild = null;
+    _children = [];
+    _selectedChildId = null;
     _vaccines = [];
     _appointments = [];
     _notificationsEnabled = true;

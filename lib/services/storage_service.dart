@@ -3,56 +3,125 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trackmyshots/models/models.dart';
 
 class StorageService {
-  static const String _keyChild = 'child_profile';
-  static const String _keyVaccines = 'vaccines';
-  static const String _keyAppointments = 'appointments';
+  static const String _keyChild = 'child_profile'; // Legacy
+  static const String _keyChildren = 'children_profiles'; // New
+  static const String _keySelectedChildId = 'selected_child_id'; // New
+  static const String _keyVaccines = 'vaccines'; // Legacy
+  static const String _keyAppointments = 'appointments'; // Legacy
   static const String _keySettings = 'app_settings';
 
-  // Save child profile
-  Future<bool> saveChildProfile(ChildProfile child) async {
+  // Save children profiles
+  Future<bool> saveChildren(List<ChildProfile> children) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonString = jsonEncode(child.toJson());
-      return await prefs.setString(_keyChild, jsonString);
+      final jsonList = children.map((c) => c.toJson()).toList();
+      final jsonString = jsonEncode(jsonList);
+      return await prefs.setString(_keyChildren, jsonString);
     } catch (e) {
-      print('Error saving child profile: $e');
+      print('Error saving children profiles: $e');
       return false;
     }
   }
 
-  // Load child profile
+  // Load children profiles
+  Future<List<ChildProfile>> loadChildren() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString(_keyChildren);
+      if (jsonString == null) return [];
+      
+      final jsonList = jsonDecode(jsonString) as List;
+      return jsonList.map((json) => ChildProfile.fromJson(json)).toList();
+    } catch (e) {
+      print('Error loading children profiles: $e');
+      return [];
+    }
+  }
+
+  // Save selected child ID
+  Future<bool> saveSelectedChildId(String? childId) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (childId == null) {
+      return await prefs.remove(_keySelectedChildId);
+    }
+    return await prefs.setString(_keySelectedChildId, childId);
+  }
+
+  // Load selected child ID
+  Future<String?> loadSelectedChildId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keySelectedChildId);
+  }
+
+  // Save child profile (Legacy support / Single update helper)
+  Future<bool> saveChildProfile(ChildProfile child) async {
+    // For backward compatibility or single updates, we'll update the list
+    final children = await loadChildren();
+    final index = children.indexWhere((c) => c.id == child.id);
+    if (index >= 0) {
+      children[index] = child;
+    } else {
+      children.add(child);
+    }
+    return await saveChildren(children);
+  }
+
+  // Load child profile (Legacy support)
   Future<ChildProfile?> loadChildProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      // First try legacy key
       final jsonString = prefs.getString(_keyChild);
-      if (jsonString == null) return null;
-      
-      final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-      return ChildProfile.fromJson(jsonMap);
+      if (jsonString != null) {
+        final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
+        return ChildProfile.fromJson(jsonMap);
+      }
+      // Fallback to selected child from list
+      final selectedId = await loadSelectedChildId();
+      if (selectedId == null) return null;
+      final children = await loadChildren();
+      return children.firstWhere((c) => c.id == selectedId);
     } catch (e) {
       print('Error loading child profile: $e');
       return null;
     }
   }
 
-  // Save vaccines
-  Future<bool> saveVaccines(List<Vaccine> vaccines) async {
+  // Clear legacy data
+  Future<void> clearLegacyData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyChild);
+    await prefs.remove(_keyVaccines);
+    await prefs.remove(_keyAppointments);
+  }
+
+  // Save vaccines (Scoped by Child ID)
+  Future<bool> saveVaccines(List<Vaccine> vaccines, {String? childId}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      final key = childId != null ? 'vaccines_$childId' : _keyVaccines;
+      
       final jsonList = vaccines.map((v) => v.toJson()).toList();
       final jsonString = jsonEncode(jsonList);
-      return await prefs.setString(_keyVaccines, jsonString);
+      return await prefs.setString(key, jsonString);
     } catch (e) {
       print('Error saving vaccines: $e');
       return false;
     }
   }
 
-  // Load vaccines
-  Future<List<Vaccine>?> loadVaccines() async {
+  // Load vaccines (Scoped by Child ID)
+  Future<List<Vaccine>?> loadVaccines({String? childId}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonString = prefs.getString(_keyVaccines);
+      // Try child-specific key first, then fallback to legacy/global if childId is null
+      String key = childId != null ? 'vaccines_$childId' : _keyVaccines;
+      
+      // If specific key doesn't exist and we asked for a specific child, 
+      // check if we are in a migration state (maybe legacy key holds this child's data?)
+      // For now, simple key lookup.
+      
+      final jsonString = prefs.getString(key);
       if (jsonString == null) return null;
       
       final jsonList = jsonDecode(jsonString) as List;
@@ -63,24 +132,28 @@ class StorageService {
     }
   }
 
-  // Save appointments
-  Future<bool> saveAppointments(List<Appointment> appointments) async {
+  // Save appointments (Scoped by Child ID)
+  Future<bool> saveAppointments(List<Appointment> appointments, {String? childId}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      final key = childId != null ? 'appointments_$childId' : _keyAppointments;
+
       final jsonList = appointments.map((a) => a.toJson()).toList();
       final jsonString = jsonEncode(jsonList);
-      return await prefs.setString(_keyAppointments, jsonString);
+      return await prefs.setString(key, jsonString);
     } catch (e) {
       print('Error saving appointments: $e');
       return false;
     }
   }
 
-  // Load appointments
-  Future<List<Appointment>?> loadAppointments() async {
+  // Load appointments (Scoped by Child ID)
+  Future<List<Appointment>?> loadAppointments({String? childId}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonString = prefs.getString(_keyAppointments);
+      final key = childId != null ? 'appointments_$childId' : _keyAppointments;
+      
+      final jsonString = prefs.getString(key);
       if (jsonString == null) return null;
       
       final jsonList = jsonDecode(jsonString) as List;
@@ -136,7 +209,7 @@ class StorageService {
   Future<bool> hasData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.containsKey(_keyChild);
+      return prefs.containsKey(_keyChild) || prefs.containsKey(_keyChildren);
     } catch (e) {
       return false;
     }

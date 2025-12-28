@@ -76,11 +76,105 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Greeting with child's name
-                Text(
-                  'Hello,\n${childProfile?.name ?? 'There'}',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hello,',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[600],
+                              ),
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'add_child') {
+                              Navigator.pushNamed(context, '/child-info');
+                            } else {
+                              appState.selectChild(value);
+                            }
+                          },
+                          offset: const Offset(0, 40),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                childProfile?.name ?? 'Select Child',
+                                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryBlue,
+                                    ),
+                              ),
+                              const Icon(Icons.keyboard_arrow_down, color: AppTheme.primaryBlue, size: 32),
+                            ],
+                          ),
+                          itemBuilder: (context) {
+                            final List<PopupMenuEntry<String>> items = [];
+                            
+                            // Add existing children
+                            for (final child in appState.children) {
+                              items.add(
+                                PopupMenuItem(
+                                  value: child.id,
+                                  child: Row(
+                                    children: [
+                                      if (child.id == childProfile?.id)
+                                        const Icon(Icons.check, color: AppTheme.primaryBlue, size: 20)
+                                      else
+                                        const SizedBox(width: 20),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        child.name,
+                                        style: TextStyle(
+                                          fontWeight: child.id == childProfile?.id 
+                                              ? FontWeight.bold 
+                                              : FontWeight.normal,
+                                          color: child.id == childProfile?.id 
+                                              ? AppTheme.primaryBlue 
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+                            
+                            // Divider
+                            if (items.isNotEmpty) {
+                              items.add(const PopupMenuDivider());
+                            }
+                            
+                            // Add Child option
+                            items.add(
+                              const PopupMenuItem(
+                                value: 'add_child',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.add_circle_outline, color: AppTheme.primaryBlue, size: 20),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Add Child',
+                                      style: TextStyle(
+                                        color: AppTheme.primaryBlue,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                            
+                            return items;
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 
                 // Show child's age if available
