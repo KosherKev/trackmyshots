@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:trackmyshots/models/models.dart';
+import 'package:trackmyshots/services/analytics_service.dart';
 
-class EducationalDetailScreen extends StatelessWidget {
+class EducationalDetailScreen extends StatefulWidget {
   final String title;
   final String content;
   final IconData icon;
@@ -16,83 +17,7 @@ class EducationalDetailScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (sponsorName != null) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                margin: const EdgeInsets.only(bottom: 24),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Text(
-                  'Brought to you by $sponsorName',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-            // Icon header
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0066B3).withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 64,
-                  color: const Color(0xFF0066B3),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Content
-            Text(
-              content,
-              style: const TextStyle(
-                fontSize: 16,
-                height: 1.6,
-                color: Color(0xFF1A1A1A),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  State<EducationalDetailScreen> createState() => _EducationalDetailScreenState();
 
   // Educational content factory
   static Widget vaccinePurpose(BuildContext context) {
@@ -302,6 +227,100 @@ ${vaccine.sideEffects}''',
    - Use shade, hats, and protective clothing.
 
 Always consult your pediatrician if you notice any persistent rashes or skin changes.''',
+    );
+  }
+}
+
+class _EducationalDetailScreenState extends State<EducationalDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService().logScreenView(screenName: 'EducationalDetail: ${widget.title}');
+    
+    if (widget.sponsorName != null) {
+      AnalyticsService().logSponsoredContentView(
+        contentTitle: widget.title,
+        sponsorName: widget.sponsorName!,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.title,
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.sponsorName != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Text(
+                  'Brought to you by ${widget.sponsorName}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+            // Icon header
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0066B3).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  widget.icon,
+                  size: 64,
+                  color: const Color(0xFF0066B3),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Content
+            Text(
+              widget.content,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.6,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

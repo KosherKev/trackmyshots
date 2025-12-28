@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:trackmyshots/models/models.dart';
+import 'package:trackmyshots/services/analytics_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class MarketplaceScreen extends StatelessWidget {
+class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
+
+  @override
+  State<MarketplaceScreen> createState() => _MarketplaceScreenState();
+}
+
+class _MarketplaceScreenState extends State<MarketplaceScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService().logScreenView(screenName: 'Marketplace');
+  }
 
   // Mock data for demonstration
   List<MarketplaceItem> get _items => [
@@ -45,13 +57,21 @@ class MarketplaceScreen extends StatelessWidget {
         ),
       ];
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
+  Future<void> _launchUrl(MarketplaceItem item) async {
+    // Log the click event
+    AnalyticsService().logMarketplaceClick(
+      itemId: item.id,
+      itemName: item.name,
+      category: item.category,
+      affiliateUrl: item.affiliateLink,
+    );
+
+    final uri = Uri.parse(item.affiliateLink);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       // In production, handle error
-      debugPrint('Could not launch $url');
+      debugPrint('Could not launch ${item.affiliateLink}');
     }
   }
 
@@ -74,7 +94,7 @@ class MarketplaceScreen extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: InkWell(
-              onTap: () => _launchUrl(item.affiliateLink),
+              onTap: () => _launchUrl(item),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.all(12),
