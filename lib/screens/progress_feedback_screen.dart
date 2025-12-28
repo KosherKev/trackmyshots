@@ -12,7 +12,7 @@ class ProgressFeedbackScreen extends StatefulWidget {
 }
 
 class _ProgressFeedbackScreenState extends State<ProgressFeedbackScreen> {
-  int _currentIndex = 3; // Would be educational normally, but this is progress
+  // int _currentIndex = 3; // Managed by MainScreen
 
   @override
   Widget build(BuildContext context) {
@@ -72,10 +72,11 @@ class _ProgressFeedbackScreenState extends State<ProgressFeedbackScreen> {
           );
         },
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      // bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
+  /*
   Widget _buildBottomNavBar() {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -122,4 +123,5 @@ class _ProgressFeedbackScreenState extends State<ProgressFeedbackScreen> {
       ),
     );
   }
+  */
 }

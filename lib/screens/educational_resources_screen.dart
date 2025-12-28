@@ -12,7 +12,7 @@ class EducationalResourcesScreen extends StatefulWidget {
 }
 
 class _EducationalResourcesScreenState extends State<EducationalResourcesScreen> {
-  int _currentIndex = 3; // Educational tab
+  // int _currentIndex = 3; // Managed by MainScreen
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +21,10 @@ class _EducationalResourcesScreenState extends State<EducationalResourcesScreen>
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back, color: Colors.black),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         title: const Text(
           'Educational Resources',
           style: TextStyle(
@@ -144,54 +144,6 @@ class _EducationalResourcesScreenState extends State<EducationalResourcesScreen>
             ],
           );
         },
-      ),
-      bottomNavigationBar: _buildBottomNavBar(),
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavIcon(Icons.track_changes, 0, '/tracking'),
-          _buildNavIcon(Icons.person, 1, '/profile'),
-          _buildNavIcon(Icons.home, 2, '/home'),
-          _buildNavIcon(Icons.medical_services, 3, null), // Current screen
-          _buildNavIcon(Icons.assignment, 4, '/reminders'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavIcon(IconData icon, int index, String? route) {
-    final isSelected = _currentIndex == index;
-    return InkWell(
-      onTap: () {
-        if (route != null) {
-          Navigator.pushNamed(context, route);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        child: Icon(
-          icon,
-          color: isSelected ? const Color(0xFF0066B3) : const Color(0xFF757575),
-          size: 28,
-        ),
       ),
     );
   }

@@ -14,7 +14,7 @@ class TrackingScreen extends StatefulWidget {
 
 class _TrackingScreenState extends State<TrackingScreen> {
   DateTime selectedDate = DateTime.now();
-  int _currentIndex = 0; // Tracking tab
+  // int _currentIndex = 0; // Managed by MainScreen
   bool _navigationChecked = false;
 
   @override
@@ -76,10 +76,11 @@ class _TrackingScreenState extends State<TrackingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: Removed back button as it is a tab
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back, color: Colors.black),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         title: const Text('Tracking'),
         actions: [
           IconButton(
@@ -205,7 +206,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
           );
         },
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -560,53 +560,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => VaccineDetailModal(vaccine: vaccine),
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavIcon(Icons.track_changes, 0, null), // Current screen
-          _buildNavIcon(Icons.person, 1, '/profile'),
-          _buildNavIcon(Icons.home, 2, '/home'),
-          _buildNavIcon(Icons.medical_services, 3, '/educational'),
-          _buildNavIcon(Icons.assignment, 4, '/reminders'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavIcon(IconData icon, int index, String? route) {
-    final isSelected = _currentIndex == index;
-    return InkWell(
-      onTap: () {
-        if (route != null) {
-          Navigator.pushNamed(context, route);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        child: Icon(
-          icon,
-          color: isSelected ? const Color(0xFF0066B3) : const Color(0xFF757575),
-          size: 28,
-        ),
-      ),
     );
   }
 }

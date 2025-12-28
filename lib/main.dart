@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:trackmyshots/theme/app_theme.dart';
 import 'package:trackmyshots/services/app_state.dart';
 import 'package:trackmyshots/screens/splash_screen.dart';
+import 'package:trackmyshots/screens/main_screen.dart';
 import 'package:trackmyshots/screens/home_screen.dart';
 import 'package:trackmyshots/screens/tracking_screen.dart';
 import 'package:trackmyshots/screens/reminders_screen.dart';
@@ -38,11 +39,11 @@ class TrackMyShotsApp extends StatelessWidget {
       home: const SplashScreen(),
       routes: {
         '/splash': (context) => const SplashScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/tracking': (context) => const TrackingScreen(),
-        '/reminders': (context) => const RemindersScreen(),
-        '/profile': (context) => const ProfileScreen(),
-        '/educational': (context) => const EducationalResourcesScreen(),
+        '/home': (context) => const MainScreen(initialIndex: 2),
+        '/tracking': (context) => const MainScreen(initialIndex: 0),
+        '/reminders': (context) => const MainScreen(initialIndex: 4),
+        '/profile': (context) => const MainScreen(initialIndex: 1),
+        '/educational': (context) => const MainScreen(initialIndex: 3),
         '/multilingual': (context) => const MultilingualScreen(),
         '/progress': (context) => const ProgressFeedbackScreen(),
         '/onboarding': (context) => const OnboardingWelcomeScreen(),
@@ -56,7 +57,7 @@ class TrackMyShotsApp extends StatelessWidget {
             return AppointmentDetailScreen(appointment: appointment);
           } catch (e) {
             // Fallback if appointment not found (e.g. deleted)
-            return const HomeScreen();
+            return const MainScreen(initialIndex: 2);
           }
         },
       },

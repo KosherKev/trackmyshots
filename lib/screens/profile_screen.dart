@@ -14,7 +14,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _currentIndex = 1; // Profile tab
+  // int _currentIndex = 1; // Managed by MainScreen
 
   @override
   Widget build(BuildContext context) {
@@ -23,10 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF4A9FCA),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: Removed back button as it is a tab
         title: const Text(
           'Profile',
           style: TextStyle(
@@ -101,7 +98,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         },
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -516,53 +512,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavIcon(Icons.track_changes, 0, '/tracking'),
-          _buildNavIcon(Icons.person, 1, null), // Current screen
-          _buildNavIcon(Icons.home, 2, '/home'),
-          _buildNavIcon(Icons.medical_services, 3, '/educational'),
-          _buildNavIcon(Icons.assignment, 4, '/reminders'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavIcon(IconData icon, int index, String? route) {
-    final isSelected = _currentIndex == index;
-    return InkWell(
-      onTap: () {
-        if (route != null) {
-          Navigator.pushNamed(context, route);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        child: Icon(
-          icon,
-          color: isSelected ? const Color(0xFF0066B3) : const Color(0xFF757575),
-          size: 28,
-        ),
       ),
     );
   }
