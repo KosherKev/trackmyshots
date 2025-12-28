@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trackmyshots/services/app_state.dart';
 import 'package:trackmyshots/screens/educational_detail_screen.dart';
+import 'package:trackmyshots/screens/marketplace_screen.dart';
 import 'package:trackmyshots/widgets/standard_card.dart';
 
 class EducationalResourcesScreen extends StatefulWidget {
@@ -93,6 +94,51 @@ class _EducationalResourcesScreenState extends State<EducationalResourcesScreen>
                     context,
                     MaterialPageRoute(
                       builder: (context) => EducationalDetailScreen.adherenceImportance(context),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'Recommended',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              StandardCard(
+                text: 'Baby Essentials & Medicines',
+                leading: const Icon(
+                  Icons.shopping_bag_outlined,
+                  color: Color(0xFF0066B3),
+                  size: 28,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MarketplaceScreen(),
+                    ),
+                  );
+                },
+              ),
+              StandardCard(
+                text: 'Skin Care for Newborns',
+                leading: const Icon(
+                  Icons.child_care,
+                  color: Color(0xFF0066B3),
+                  size: 28,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EducationalDetailScreen.newbornSkinCare(context),
                     ),
                   );
                 },

@@ -5,12 +5,14 @@ class EducationalDetailScreen extends StatelessWidget {
   final String title;
   final String content;
   final IconData icon;
+  final String? sponsorName;
 
   const EducationalDetailScreen({
     super.key,
     required this.title,
     required this.content,
     required this.icon,
+    this.sponsorName,
   });
 
   @override
@@ -39,6 +41,27 @@ class EducationalDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (sponsorName != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Text(
+                  'Brought to you by $sponsorName',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
             // Icon header
             Center(
               child: Container(
@@ -250,6 +273,35 @@ ${vaccine.administrationSchedule}
 
 Potential Side Effects:
 ${vaccine.sideEffects}''',
+    );
+  }
+
+  static Widget newbornSkinCare(BuildContext context) {
+    return const EducationalDetailScreen(
+      title: 'Skin Care for Newborns',
+      icon: Icons.child_care,
+      sponsorName: "Cusson's Baby",
+      content: '''Newborn skin is delicate and requires special care. Here are some tips to keep your baby's skin healthy:
+
+1. Bathing:
+   - Use lukewarm water.
+   - Keep baths short (5-10 minutes).
+   - Use mild, fragrance-free soaps.
+
+2. Moisturizing:
+   - Apply a gentle moisturizer immediately after bathing while skin is still damp.
+   - Look for products specifically designed for sensitive baby skin.
+
+3. Diaper Area:
+   - Change diapers frequently to prevent rash.
+   - Clean the area gently with water or alcohol-free wipes.
+   - Allow the skin to air dry when possible.
+
+4. Sun Protection:
+   - Keep newborns out of direct sunlight.
+   - Use shade, hats, and protective clothing.
+
+Always consult your pediatrician if you notice any persistent rashes or skin changes.''',
     );
   }
 }
