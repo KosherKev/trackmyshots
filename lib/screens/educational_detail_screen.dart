@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trackmyshots/models/models.dart';
 
 class EducationalDetailScreen extends StatelessWidget {
   final String title;
@@ -232,6 +233,23 @@ Your Role as a Parent:
 • Share accurate information with other parents
 
 Remember: Vaccination is one of the safest and most effective ways to protect your child's health and prevent serious diseases.''',
+    );
+  }
+
+  static Widget forVaccine(BuildContext context, Vaccine vaccine) {
+    return EducationalDetailScreen(
+      title: vaccine.name,
+      icon: Icons.vaccines,
+      content: '''${vaccine.description}
+
+Purpose:
+${vaccine.purpose}
+
+Recommended Schedule:
+${vaccine.administrationSchedule}
+
+Potential Side Effects:
+${vaccine.sideEffects}''',
     );
   }
 }

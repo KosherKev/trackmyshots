@@ -21,16 +21,16 @@ class SampleDataService {
     final birthDate = child.dateOfBirth;
     
     return [
-      // Hepatitis B - 3 doses (at birth, 1-2 months, 6-18 months)
+      // Hepatitis B - 3 doses
       Vaccine(
         id: 'hep_b',
         name: 'Hepatitis B',
         shortName: 'H',
-        description: 'Protects against Hepatitis B virus',
+        description: 'Hepatitis B is a liver disease that can cause mild illness lasting a few weeks, or it can lead to a serious, lifelong illness.',
         totalDoses: 3,
         administrationSchedule: 'At birth, 1-2 months, and 6-18 months',
-        purpose: 'Prevents Hepatitis B infection which can cause liver disease',
-        sideEffects: 'Mild fever, soreness at injection site',
+        purpose: 'Protects against Hepatitis B virus, which spreads through blood and body fluids. The vaccine is the first anti-cancer vaccine because it prevents liver cancer caused by the virus.',
+        sideEffects: 'Soreness where the shot was given, fever, or allergic reactions (rare).',
         doses: [
           VaccineDose(
             id: 'hep_b_1',
@@ -56,16 +56,16 @@ class SampleDataService {
         ],
       ),
 
-      // Rotavirus - 2 doses (at 6 and 10 weeks)
+      // Rotavirus - 2 doses
       Vaccine(
         id: 'rotavirus',
         name: 'Rotavirus',
         shortName: 'R',
-        description: 'Protects against rotavirus gastroenteritis',
+        description: 'Rotavirus causes severe diarrhea and vomiting. It affects mostly babies and young children.',
         totalDoses: 2,
         administrationSchedule: 'At 6 and 10 weeks of age',
-        purpose: 'Prevents severe diarrhea caused by rotavirus',
-        sideEffects: 'Mild diarrhea, irritability',
+        purpose: 'Prevents severe diarrhea, vomiting, fever, and abdominal pain caused by rotavirus. Vaccination prevents hospitalization from dehydration.',
+        sideEffects: 'Mild diarrhea, vomiting, irritability, or fever.',
         doses: [
           VaccineDose(
             id: 'rota_1',
@@ -84,16 +84,16 @@ class SampleDataService {
         ],
       ),
 
-      // DTP - 4 doses (at 6, 10, 14 weeks, and 15-18 months)
+      // DTP - 4 doses
       Vaccine(
         id: 'dtp',
         name: 'DTP (Diphtheria, Tetanus, Pertussis)',
         shortName: 'D',
-        description: 'Protects against diphtheria, tetanus, and whooping cough',
+        description: 'Protects against three serious diseases: Diphtheria (breathing problems), Tetanus (lockjaw), and Pertussis (whooping cough).',
         totalDoses: 4,
         administrationSchedule: 'At 6, 10, 14 weeks, and 15-18 months',
-        purpose: 'Prevents three serious bacterial infections',
-        sideEffects: 'Fever, fussiness, swelling at injection site',
+        purpose: 'Prevents thick coating in throat (Diphtheria), painful muscle stiffening (Tetanus), and severe coughing fits (Pertussis).',
+        sideEffects: 'Fever, redness/swelling at shot site, soreness, fussiness, or tiredness.',
         doses: [
           VaccineDose(
             id: 'dtp_1',
@@ -126,16 +126,16 @@ class SampleDataService {
         ],
       ),
 
-      // Hib - 4 doses (at 6, 10, 14 weeks, and 12-15 months)
+      // Hib - 4 doses
       Vaccine(
         id: 'hib',
         name: 'Hib (Haemophilus influenzae type b)',
         shortName: 'H',
-        description: 'Protects against Haemophilus influenzae type b',
+        description: 'Haemophilus influenzae type b can cause severe infection, affecting the brain (meningitis) and lungs (pneumonia).',
         totalDoses: 4,
         administrationSchedule: 'At 6, 10, 14 weeks, and 12-15 months',
-        purpose: 'Prevents meningitis and other serious infections',
-        sideEffects: 'Redness at injection site, mild fever',
+        purpose: 'Prevents meningitis, pneumonia, and severe throat infections (epiglottitis) which can lead to brain damage or deafness.',
+        sideEffects: 'Redness, warmth, or swelling at injection site, and fever.',
         doses: [
           VaccineDose(
             id: 'hib_1',
@@ -168,16 +168,16 @@ class SampleDataService {
         ],
       ),
 
-      // PCV - 4 doses (at 6, 10, 14 weeks, and 12-15 months)
+      // PCV - 4 doses
       Vaccine(
         id: 'pcv',
         name: 'PCV (Pneumococcal Conjugate Vaccine)',
         shortName: 'P',
-        description: 'Protects against pneumococcal disease',
+        description: 'Pneumococcal disease is caused by bacteria that can lead to ear infections, pneumonia, and meningitis.',
         totalDoses: 4,
         administrationSchedule: 'At 6, 10, 14 weeks, and 12-15 months',
-        purpose: 'Prevents pneumonia, meningitis, and blood infections',
-        sideEffects: 'Drowsiness, loss of appetite, redness at injection site',
+        purpose: 'Protects against pneumococcal bacteria which cause ear infections, sinus infections, pneumonia, and bloodstream infections.',
+        sideEffects: 'Drowsiness, temporary loss of appetite, redness/swelling at shot site, or mild fever.',
         doses: [
           VaccineDose(
             id: 'pcv_1',
@@ -203,7 +203,7 @@ class SampleDataService {
           VaccineDose(
             id: 'pcv_4',
             doseNumber: 4,
-            scheduledDate: birthDate.add(const Duration(days: 364)), // 52 weeks
+            scheduledDate: birthDate.add(const Duration(days: 364)), // 52 weeks (~12 months)
             isAdministered: false,
             ageInWeeks: 52,
           ),
@@ -222,11 +222,11 @@ class SampleDataService {
         id: 'hep_b',
         name: 'Hepatitis B',
         shortName: 'H',
-        description: 'Protects against Hepatitis B virus',
+        description: 'Hepatitis B is a liver disease that can cause mild illness lasting a few weeks, or it can lead to a serious, lifelong illness.',
         totalDoses: 3,
         administrationSchedule: 'At birth, 1-2 months, and 6-18 months',
-        purpose: 'Prevents Hepatitis B infection which can cause liver disease',
-        sideEffects: 'Mild fever, soreness at injection site',
+        purpose: 'Protects against Hepatitis B virus, which spreads through blood and body fluids. The vaccine is the first anti-cancer vaccine because it prevents liver cancer caused by the virus.',
+        sideEffects: 'Soreness where the shot was given, fever, or allergic reactions (rare).',
         doses: [
           VaccineDose(
             id: 'hep_b_1',
@@ -266,11 +266,11 @@ class SampleDataService {
         id: 'rotavirus',
         name: 'Rotavirus',
         shortName: 'R',
-        description: 'Protects against rotavirus gastroenteritis',
+        description: 'Rotavirus causes severe diarrhea and vomiting. It affects mostly babies and young children.',
         totalDoses: 2,
         administrationSchedule: 'At 6 and 10 weeks of age',
-        purpose: 'Prevents severe diarrhea caused by rotavirus',
-        sideEffects: 'Mild diarrhea, irritability',
+        purpose: 'Prevents severe diarrhea, vomiting, fever, and abdominal pain caused by rotavirus. Vaccination prevents hospitalization from dehydration.',
+        sideEffects: 'Mild diarrhea, vomiting, irritability, or fever.',
         doses: [
           VaccineDose(
             id: 'rota_1',
@@ -297,11 +297,11 @@ class SampleDataService {
         id: 'dtp',
         name: 'DTP (Diphtheria, Tetanus, Pertussis)',
         shortName: 'D',
-        description: 'Protects against diphtheria, tetanus, and whooping cough',
+        description: 'Protects against three serious diseases: Diphtheria (breathing problems), Tetanus (lockjaw), and Pertussis (whooping cough).',
         totalDoses: 4,
         administrationSchedule: 'At 6, 10, 14 weeks, and 15-18 months',
-        purpose: 'Prevents three serious bacterial infections',
-        sideEffects: 'Fever, fussiness, swelling at injection site',
+        purpose: 'Prevents thick coating in throat (Diphtheria), painful muscle stiffening (Tetanus), and severe coughing fits (Pertussis).',
+        sideEffects: 'Fever, redness/swelling at shot site, soreness, fussiness, or tiredness.',
         doses: [
           VaccineDose(
             id: 'dtp_1',
@@ -342,11 +342,11 @@ class SampleDataService {
         id: 'hib',
         name: 'Hib (Haemophilus influenzae type b)',
         shortName: 'H',
-        description: 'Protects against Haemophilus influenzae type b',
+        description: 'Haemophilus influenzae type b can cause severe infection, affecting the brain (meningitis) and lungs (pneumonia).',
         totalDoses: 4,
         administrationSchedule: 'At 6, 10, 14 weeks, and 12-15 months',
-        purpose: 'Prevents meningitis and other serious infections',
-        sideEffects: 'Redness at injection site, mild fever',
+        purpose: 'Prevents meningitis, pneumonia, and severe throat infections (epiglottitis) which can lead to brain damage or deafness.',
+        sideEffects: 'Redness, warmth, or swelling at injection site, and fever.',
         doses: [
           VaccineDose(
             id: 'hib_1',
@@ -393,11 +393,11 @@ class SampleDataService {
         id: 'pcv',
         name: 'PCV (Pneumococcal Conjugate Vaccine)',
         shortName: 'P',
-        description: 'Protects against pneumococcal disease',
+        description: 'Pneumococcal disease is caused by bacteria that can lead to ear infections, pneumonia, and meningitis.',
         totalDoses: 4,
         administrationSchedule: 'At 6, 10, 14 weeks, and 12-15 months',
-        purpose: 'Prevents pneumonia, meningitis, and blood infections',
-        sideEffects: 'Drowsiness, loss of appetite, redness at injection site',
+        purpose: 'Protects against pneumococcal bacteria which cause ear infections, sinus infections, pneumonia, and bloodstream infections.',
+        sideEffects: 'Drowsiness, temporary loss of appetite, redness/swelling at shot site, or mild fever.',
         doses: [
           VaccineDose(
             id: 'pcv_1',

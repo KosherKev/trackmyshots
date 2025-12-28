@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:trackmyshots/services/app_state.dart';
 import 'package:trackmyshots/screens/educational_detail_screen.dart';
 import 'package:trackmyshots/widgets/standard_card.dart';
 
@@ -41,74 +43,107 @@ class _EducationalResourcesScreenState extends State<EducationalResourcesScreen>
           ),
         ],
       ),
-      body: StandardScreenContainer(
-        children: [
-          StandardCard(
-            text: 'Vaccine Purpose',
-            leading: const Icon(
-              Icons.article_outlined,
-              color: Color(0xFF0066B3),
-              size: 28,
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EducationalDetailScreen.vaccinePurpose(context),
+      body: Consumer<AppState>(
+        builder: (context, appState, child) {
+          final vaccines = appState.vaccines;
+          
+          return StandardScreenContainer(
+            children: [
+              StandardCard(
+                text: 'Vaccine Purpose',
+                leading: const Icon(
+                  Icons.article_outlined,
+                  color: Color(0xFF0066B3),
+                  size: 28,
                 ),
-              );
-            },
-          ),
-          StandardCard(
-            text: 'Potential Side Effects',
-            leading: const Icon(
-              Icons.warning_amber_outlined,
-              color: Color(0xFF0066B3),
-              size: 28,
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EducationalDetailScreen.sideEffects(context),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EducationalDetailScreen.vaccinePurpose(context),
+                    ),
+                  );
+                },
+              ),
+              StandardCard(
+                text: 'Potential Side Effects',
+                leading: const Icon(
+                  Icons.warning_amber_outlined,
+                  color: Color(0xFF0066B3),
+                  size: 28,
                 ),
-              );
-            },
-          ),
-          StandardCard(
-            text: 'Importance of Adherence',
-            leading: const Icon(
-              Icons.verified_outlined,
-              color: Color(0xFF0066B3),
-              size: 28,
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EducationalDetailScreen.adherenceImportance(context),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EducationalDetailScreen.sideEffects(context),
+                    ),
+                  );
+                },
+              ),
+              StandardCard(
+                text: 'Importance of Adherence',
+                leading: const Icon(
+                  Icons.verified_outlined,
+                  color: Color(0xFF0066B3),
+                  size: 28,
                 ),
-              );
-            },
-          ),
-          StandardCard(
-            text: 'Immunization Overview',
-            leading: const Icon(
-              Icons.vaccines_outlined,
-              color: Color(0xFF0066B3),
-              size: 28,
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EducationalDetailScreen.immunizationOverview(context),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EducationalDetailScreen.adherenceImportance(context),
+                    ),
+                  );
+                },
+              ),
+              StandardCard(
+                text: 'Immunization Overview',
+                leading: const Icon(
+                  Icons.vaccines_outlined,
+                  color: Color(0xFF0066B3),
+                  size: 28,
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 100), // Space for bottom nav
-        ],
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EducationalDetailScreen.immunizationOverview(context),
+                    ),
+                  );
+                },
+              ),
+              
+              if (vaccines.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                  child: Text(
+                    'Vaccine Guide',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0066B3),
+                    ),
+                  ),
+                ),
+                ...vaccines.map((vaccine) => StandardCard(
+                  text: vaccine.name,
+                  leading: const Icon(Icons.vaccines, color: Color(0xFF0066B3), size: 28),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EducationalDetailScreen.forVaccine(context, vaccine),
+                      ),
+                    );
+                  },
+                )),
+              ],
+              
+              const SizedBox(height: 100), // Space for bottom nav
+            ],
+          );
+        },
       ),
       bottomNavigationBar: _buildBottomNavBar(),
     );
