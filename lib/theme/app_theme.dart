@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Primary Colors - Based on the blue gradient theme from screenshots
@@ -45,7 +46,7 @@ class AppTheme {
   // Shadow
   static const Color shadowColor = Color(0x1A000000);
   
-  // Theme Data
+  // Theme Data with Montserrat font
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.light(
@@ -62,13 +63,16 @@ class AppTheme {
     ),
     scaffoldBackgroundColor: backgroundLight,
     
+    // Set Montserrat as default font
+    fontFamily: GoogleFonts.montserrat().fontFamily,
+    
     // AppBar Theme
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: backgroundLight,
       elevation: 0,
       centerTitle: true,
-      iconTheme: IconThemeData(color: textPrimary),
-      titleTextStyle: TextStyle(
+      iconTheme: const IconThemeData(color: textPrimary),
+      titleTextStyle: GoogleFonts.montserrat(
         color: textPrimary,
         fontSize: 24,
         fontWeight: FontWeight.bold,
@@ -84,71 +88,71 @@ class AppTheme {
       elevation: 8,
     ),
     
-    // Text Theme
-    textTheme: const TextTheme(
+    // Text Theme with Montserrat
+    textTheme: TextTheme(
       // Headlines
-      headlineLarge: TextStyle(
+      headlineLarge: GoogleFonts.montserrat(
         fontSize: 32,
         fontWeight: FontWeight.bold,
         color: textPrimary,
       ),
-      headlineMedium: TextStyle(
+      headlineMedium: GoogleFonts.montserrat(
         fontSize: 28,
         fontWeight: FontWeight.bold,
         color: textPrimary,
       ),
-      headlineSmall: TextStyle(
+      headlineSmall: GoogleFonts.montserrat(
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: textPrimary,
       ),
       
       // Titles
-      titleLarge: TextStyle(
+      titleLarge: GoogleFonts.montserrat(
         fontSize: 22,
         fontWeight: FontWeight.w600,
         color: textPrimary,
       ),
-      titleMedium: TextStyle(
+      titleMedium: GoogleFonts.montserrat(
         fontSize: 18,
         fontWeight: FontWeight.w600,
         color: textPrimary,
       ),
-      titleSmall: TextStyle(
+      titleSmall: GoogleFonts.montserrat(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: textPrimary,
       ),
       
       // Body
-      bodyLarge: TextStyle(
+      bodyLarge: GoogleFonts.montserrat(
         fontSize: 16,
         fontWeight: FontWeight.normal,
         color: textPrimary,
       ),
-      bodyMedium: TextStyle(
+      bodyMedium: GoogleFonts.montserrat(
         fontSize: 14,
         fontWeight: FontWeight.normal,
         color: textPrimary,
       ),
-      bodySmall: TextStyle(
+      bodySmall: GoogleFonts.montserrat(
         fontSize: 12,
         fontWeight: FontWeight.normal,
         color: textSecondary,
       ),
       
       // Labels
-      labelLarge: TextStyle(
+      labelLarge: GoogleFonts.montserrat(
         fontSize: 14,
         fontWeight: FontWeight.w500,
         color: textPrimary,
       ),
-      labelMedium: TextStyle(
+      labelMedium: GoogleFonts.montserrat(
         fontSize: 12,
         fontWeight: FontWeight.w500,
         color: textPrimary,
       ),
-      labelSmall: TextStyle(
+      labelSmall: GoogleFonts.montserrat(
         fontSize: 10,
         fontWeight: FontWeight.w500,
         color: textSecondary,
@@ -165,7 +169,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        textStyle: const TextStyle(
+        textStyle: GoogleFonts.montserrat(
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
@@ -193,6 +197,8 @@ class AppTheme {
         borderSide: const BorderSide(color: error),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      labelStyle: GoogleFonts.montserrat(),
+      hintStyle: GoogleFonts.montserrat(),
     ),
     
     // Icon Theme

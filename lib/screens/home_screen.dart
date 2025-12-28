@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:trackmyshots/theme/app_theme.dart';
 import 'package:trackmyshots/services/app_state.dart';
 import 'package:trackmyshots/models/models.dart';
+import 'package:trackmyshots/screens/appointment_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -67,29 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 
                 const SizedBox(height: 24),
 
-                // Search Bar (Placeholder)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.paddingMedium,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.search, color: Colors.grey[500]),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Search Doctor',
-                        style: TextStyle(color: Colors.grey[500]),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
                 // Quick Access Vaccine Buttons with real data
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -139,11 +117,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Show real appointment or placeholder
+                // Show real appointment or add button
                 if (upcomingAppointment != null)
-                  _buildAppointmentCard(upcomingAppointment)
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AppointmentDetailScreen(
+                            appointment: upcomingAppointment,
+                          ),
+                        ),
+                      );
+                    },
+                    child: _buildAppointmentCard(upcomingAppointment),
+                  )
                 else
-                  _buildNoAppointmentCard(),
+                  _buildNoAppointmentCard(context),
                   
                 const SizedBox(height: 32),
 
@@ -155,7 +145,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                 ),
                 const SizedBox(height: 16),
-                _buildRecentVisitCard(appState.appointments),
+                _buildRecentVisitCard(context, appState.appointments),
+                
+                const SizedBox(height: 100), // Space for bottom nav
               ],
             ),
           );
@@ -174,11 +166,9 @@ class _HomeScreenState extends State<HomeScreen> {
     String vaccineId,
   ) {
     final vaccine = appState.getVaccineById(vaccineId);
-    final percentage = vaccine?.completionPercentage.toInt() ?? 0;
     
     return GestureDetector(
       onTap: () {
-        // Navigate to tracking screen or show vaccine details
         Navigator.pushNamed(context, '/tracking');
       },
       child: Column(
@@ -250,7 +240,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAppointmentCard(Appointment appointment) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.paddingMedium),
-      decoration: AppDecoration.gradientCard,
+      decoration: BoxDecoration(
+        gradient: AppTheme.blueGradient,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.shadowColor,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           // Doctor Avatar
@@ -258,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
             radius: 30,
             backgroundColor: Colors.white.withOpacity(0.3),
             child: Text(
-              appointment.doctorName.substring(4, 5), // First letter of last name
+              appointment.doctorName.substring(0, 1),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -329,62 +329,75 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+          const Icon(Icons.chevron_right, color: Colors.white, size: 28),
         ],
       ),
     );
   }
 
-  Widget _buildNoAppointmentCard() {
+  Widget _buildNoAppointmentCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.paddingLarge),
       decoration: AppTheme.cardDecoration,
-      child: Center(
-        child: Column(
-          children: [
-            Icon(Icons.calendar_today_outlined, 
-                size: 48, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'No upcoming appointments',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+      child: Column(
+        children: [
+          Icon(Icons.calendar_today_outlined, 
+              size: 48, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'No upcoming appointments',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 16,
             ),
-            const SizedBox(height: 8),
-            TextButton.icon(
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
               onPressed: () {
-                // TODO: Navigate to appointment booking
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddEditAppointmentScreen(),
+                  ),
+                );
               },
               icon: const Icon(Icons.add),
               label: const Text('Schedule Appointment'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryBlue,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildRecentVisitCard(List<Appointment> appointments) {
-    final pastAppointments = appointments
-        .where((apt) => apt.isPast && apt.status == AppointmentStatus.completed)
+  Widget _buildRecentVisitCard(BuildContext context, List<Appointment> appointments) {
+    // Get completed appointments
+    final completedAppointments = appointments
+        .where((apt) => apt.status == AppointmentStatus.completed)
         .toList()
       ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
 
-    if (pastAppointments.isEmpty) {
+    if (completedAppointments.isEmpty) {
       return Container(
-        height: 150,
+        padding: const EdgeInsets.all(AppTheme.paddingLarge),
         decoration: AppTheme.cardDecoration,
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.history, size: 48, color: Colors.grey[400]),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Text(
-                'No recent visits yet',
-                style: TextStyle(color: Colors.grey[600]),
+                'No recent visits',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16,
+                ),
               ),
             ],
           ),
@@ -392,144 +405,117 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final recentVisit = pastAppointments.first;
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingMedium),
-      decoration: AppTheme.cardDecoration,
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.success.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.check_circle,
-              color: AppTheme.success,
-              size: 32,
+    final recentVisit = completedAppointments.first;
+    
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AppointmentDetailScreen(
+              appointment: recentVisit,
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  recentVisit.doctorName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  recentVisit.formattedDate,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
-                if (recentVisit.notes != null) ...[
-                  const SizedBox(height: 8),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.paddingMedium),
+        decoration: AppTheme.cardDecoration,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.success.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.check_circle,
+                color: AppTheme.success,
+                size: 32,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    recentVisit.notes!,
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                      fontSize: 13,
+                    recentVisit.doctorName,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    recentVisit.doctorSpecialty,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    recentVisit.formattedDate,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[500],
+                    ),
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+            const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildBottomNavBar() {
     return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.primaryDark,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
-      child: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/tracking');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/profile');
-              break;
-            case 2:
-              // Home - already here
-              break;
-            case 3:
-              Navigator.pushNamed(context, '/educational');
-              break;
-            case 4:
-              Navigator.pushNamed(context, '/reminders');
-              break;
-          }
-        },
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white60,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.track_changes),
-            label: 'Tracking',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.medical_services_outlined),
-            label: 'Resources',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_outlined),
-            label: 'Notes',
-          ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildNavIcon(Icons.track_changes, 0, '/tracking'),
+          _buildNavIcon(Icons.person, 1, '/profile'),
+          _buildNavIcon(Icons.home, 2, null), // Current screen
+          _buildNavIcon(Icons.medical_services, 3, '/educational'),
+          _buildNavIcon(Icons.assignment, 4, '/reminders'),
         ],
       ),
     );
   }
-}
 
-// Helper class for decorations
-class AppDecoration {
-  static BoxDecoration gradientCard = BoxDecoration(
-    gradient: const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [AppTheme.primaryBlue, AppTheme.accentCyan],
-    ),
-    borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-    boxShadow: [
-      BoxShadow(
-        color: AppTheme.shadowColor,
-        blurRadius: 8,
-        offset: const Offset(0, 2),
+  Widget _buildNavIcon(IconData icon, int index, String? route) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () {
+        if (route != null) {
+          Navigator.pushNamed(context, route);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          icon,
+          color: isSelected ? const Color(0xFF0066B3) : const Color(0xFF757575),
+          size: 28,
+        ),
       ),
-    ],
-  );
+    );
+  }
 }

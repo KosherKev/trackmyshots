@@ -160,6 +160,8 @@ class _TrackingScreenState extends State<TrackingScreen> {
                 ),
                 const SizedBox(height: 16),
                 ...vaccines.map((vaccine) => _buildVaccineListItem(context, vaccine)),
+                
+                const SizedBox(height: 100), // Space for bottom nav
               ],
             ),
           );
@@ -520,64 +522,47 @@ class _TrackingScreenState extends State<TrackingScreen> {
 
   Widget _buildBottomNavBar() {
     return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.primaryDark,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          switch (index) {
-            case 0:
-              // Already on tracking
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/profile');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/home');
-              break;
-            case 3:
-              Navigator.pushNamed(context, '/educational');
-              break;
-            case 4:
-              Navigator.pushNamed(context, '/reminders');
-              break;
-          }
-        },
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white60,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.track_changes),
-            label: 'Tracking',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.medical_services_outlined),
-            label: 'Resources',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_outlined),
-            label: 'Notes',
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
         ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildNavIcon(Icons.track_changes, 0, null), // Current screen
+          _buildNavIcon(Icons.person, 1, '/profile'),
+          _buildNavIcon(Icons.home, 2, '/home'),
+          _buildNavIcon(Icons.medical_services, 3, '/educational'),
+          _buildNavIcon(Icons.assignment, 4, '/reminders'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavIcon(IconData icon, int index, String? route) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () {
+        if (route != null) {
+          Navigator.pushNamed(context, route);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          icon,
+          color: isSelected ? const Color(0xFF0066B3) : const Color(0xFF757575),
+          size: 28,
+        ),
       ),
     );
   }

@@ -35,6 +35,9 @@ dependencies:
   # Charts & Progress
   fl_chart: ^0.66.0
   percent_indicator: ^4.2.3
+  
+  # Fonts
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   flutter_test:

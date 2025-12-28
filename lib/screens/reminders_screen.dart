@@ -1,333 +1,130 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:trackmyshots/theme/app_theme.dart';
-import 'package:trackmyshots/services/app_state.dart';
-import 'package:trackmyshots/models/models.dart';
+import 'package:trackmyshots/widgets/standard_card.dart';
 
-class RemindersScreen extends StatelessWidget {
+class RemindersScreen extends StatefulWidget {
   const RemindersScreen({super.key});
+
+  @override
+  State<RemindersScreen> createState() => _RemindersScreenState();
+}
+
+class _RemindersScreenState extends State<RemindersScreen> {
+  int _currentIndex = 4; // Reminders tab
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Reminders & Notifications'),
+        title: const Text(
+          'Reminders & Notifications',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.notifications_outlined, color: Colors.black),
             onPressed: () {
-              // TODO: Navigate to notification settings
+              // Already on reminders screen
             },
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppTheme.primaryDark, AppTheme.primaryBlue.withOpacity(0.8)],
-          ),
-        ),
-        child: Consumer<AppState>(
-          builder: (context, appState, child) {
-            final upcomingDoses = appState.upcomingDoses;
-            final upcomingAppointment = appState.upcomingAppointment;
-            
-            final reminders = _buildRemindersList(
-              upcomingDoses,
-              upcomingAppointment,
-            );
-
-            return ListView(
-              padding: const EdgeInsets.all(AppTheme.paddingLarge),
-              children: [
-                // Header Stats
-                _buildStatsCard(context, upcomingDoses.length),
-                const SizedBox(height: 24),
-
-                // Reminders List
-                if (reminders.isEmpty)
-                  _buildEmptyState()
-                else
-                  ...reminders.map((reminder) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: reminder,
-                    );
-                  }).toList(),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatsCard(BuildContext context, int upcomingCount) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingLarge),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.shadowColor,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
+      body: StandardScreenContainer(
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryBlue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.notifications_active,
-              color: AppTheme.primaryBlue,
-              size: 32,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$upcomingCount Upcoming',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  upcomingCount == 1 
-                      ? 'vaccination scheduled' 
-                      : 'vaccinations scheduled',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.chevron_right, color: Colors.grey[400]),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingXLarge),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.notifications_off_outlined,
-            size: 80,
-            color: Colors.grey[300],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'All Caught Up!',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'You have no upcoming vaccinations or reminders',
+          // Title
+          const SizedBox(height: 20),
+          const Text(
+            'Reminders &\nNotifications',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
             ),
           ),
+          const SizedBox(height: 32),
+          
+          // Reminder Cards
+          StandardCard(
+            text: 'PCV dose scheduled 23rd June',
+            centerText: true,
+          ),
+          StandardCard(
+            text: 'Hib dose was given on 15th July',
+            centerText: true,
+          ),
+          StandardCard(
+            text: 'Learn about potential side effects',
+            centerText: true,
+          ),
+          StandardCard(
+            text: 'Rotavirus will be given in 5 weeks time',
+            centerText: true,
+          ),
+          
+          const SizedBox(height: 100), // Space for bottom nav
         ],
       ),
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
-  List<Widget> _buildRemindersList(
-    List<Map<String, dynamic>> upcomingDoses,
-    Appointment? upcomingAppointment,
-  ) {
-    final List<Widget> reminders = [];
-
-    // Add appointment reminder if exists
-    if (upcomingAppointment != null) {
-      reminders.add(_buildAppointmentReminderCard(upcomingAppointment));
-    }
-
-    // Add dose reminders
-    for (var doseInfo in upcomingDoses) {
-      final vaccine = doseInfo['vaccine'] as Vaccine;
-      final dose = doseInfo['dose'] as VaccineDose;
-      final daysUntil = doseInfo['daysUntil'] as int;
-
-      if (daysUntil < 0) {
-        // Overdue
-        reminders.add(_buildReminderCard(
-          '${vaccine.name} dose ${dose.doseNumber} is overdue',
-          Icons.warning,
-          AppTheme.error,
-          'Scheduled for ${_formatDate(dose.scheduledDate!)}',
-          isUrgent: true,
-        ));
-      } else if (daysUntil <= 7) {
-        // Due soon
-        reminders.add(_buildReminderCard(
-          '${vaccine.name} dose ${dose.doseNumber} due in $daysUntil days',
-          Icons.access_time,
-          AppTheme.warning,
-          'Scheduled for ${_formatDate(dose.scheduledDate!)}',
-        ));
-      } else {
-        // Future dose
-        reminders.add(_buildReminderCard(
-          '${vaccine.name} dose ${dose.doseNumber} scheduled',
-          Icons.calendar_today,
-          AppTheme.info,
-          'Due ${_formatDate(dose.scheduledDate!)}',
-        ));
-      }
-    }
-
-    // Add educational reminders
-    if (reminders.length < 5) {
-      reminders.add(_buildReminderCard(
-        'Learn about potential side effects',
-        Icons.info_outline,
-        AppTheme.info,
-        'Tap to read more about vaccine reactions',
-      ));
-    }
-
-    return reminders;
-  }
-
-  Widget _buildAppointmentReminderCard(Appointment appointment) {
-    final daysUntil = appointment.dateTime.difference(DateTime.now()).inDays;
-    
-    return _buildReminderCard(
-      'Appointment with ${appointment.doctorName}',
-      Icons.event,
-      AppTheme.primaryBlue,
-      '${appointment.formattedDate} at ${appointment.formattedTime}',
-      subtitle: daysUntil <= 1 
-          ? daysUntil == 0 
-              ? 'Today' 
-              : 'Tomorrow'
-          : 'In $daysUntil days',
-    );
-  }
-
-  Widget _buildReminderCard(
-    String message,
-    IconData icon,
-    Color color,
-    String details, {
-    String? subtitle,
-    bool isUrgent = false,
-  }) {
+  Widget _buildBottomNavBar() {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingLarge),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-        border: isUrgent
-            ? Border.all(color: color, width: 2)
-            : null,
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.shadowColor,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  message,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (subtitle != null) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                Text(
-                  details,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isUrgent)
-            Icon(Icons.priority_high, color: color, size: 20),
+          _buildNavIcon(Icons.track_changes, 0, '/tracking'),
+          _buildNavIcon(Icons.person, 1, '/profile'),
+          _buildNavIcon(Icons.home, 2, '/home'),
+          _buildNavIcon(Icons.medical_services, 3, '/educational'),
+          _buildNavIcon(Icons.assignment, 4, null), // Current screen
         ],
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    
-    return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]}';
+  Widget _buildNavIcon(IconData icon, int index, String? route) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () {
+        if (route != null) {
+          Navigator.pushNamed(context, route);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          icon,
+          color: isSelected ? const Color(0xFF0066B3) : const Color(0xFF757575),
+          size: 28,
+        ),
+      ),
+    );
   }
 }

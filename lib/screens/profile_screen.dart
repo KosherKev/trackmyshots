@@ -4,6 +4,7 @@ import 'package:trackmyshots/theme/app_theme.dart';
 import 'package:trackmyshots/services/app_state.dart';
 import 'package:trackmyshots/models/models.dart';
 import 'package:trackmyshots/widgets/edit_child_dialog.dart';
+import 'package:trackmyshots/screens/support_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,134 +14,94 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  int _currentIndex = 1; // Profile tab
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.primaryLight,
+      backgroundColor: const Color(0xFF4A9FCA), // Solid blue background
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryLight,
+        backgroundColor: const Color(0xFF4A9FCA),
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () => _showMoreOptions(context),
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
-        ],
+        ),
+        centerTitle: true,
       ),
       body: Consumer<AppState>(
         builder: (context, appState, child) {
           final childProfile = appState.currentChild;
           
           return ListView(
-            padding: const EdgeInsets.all(AppTheme.paddingMedium),
+            padding: const EdgeInsets.all(16),
             children: [
-              // PRO Upgrade Card
-              _buildProUpgradeCard(context),
-              const SizedBox(height: 16),
-
               // User Profile Card
               _buildUserProfileCard(context, childProfile, appState),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Vaccination Progress Summary
               _buildProgressSummary(context, appState),
               const SizedBox(height: 24),
 
-              // App Section
-              _buildSectionHeader('App'),
-              const SizedBox(height: 8),
+              // App Section Header
+              const Padding(
+                padding: EdgeInsets.only(left: 4, bottom: 8),
+                child: Text(
+                  'App',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               _buildAppSection(context, appState),
               const SizedBox(height: 24),
 
-              // Data Management Section
-              _buildSectionHeader('Data Management'),
-              const SizedBox(height: 8),
+              // Data Management Section Header
+              const Padding(
+                padding: EdgeInsets.only(left: 4, bottom: 8),
+                child: Text(
+                  'Data Management',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               _buildDataSection(context, appState),
               const SizedBox(height: 24),
 
-              // General Section
-              _buildSectionHeader('General'),
-              const SizedBox(height: 8),
+              // General Section Header
+              const Padding(
+                padding: EdgeInsets.only(left: 4, bottom: 8),
+                child: Text(
+                  'General',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               _buildGeneralSection(context),
               
-              const SizedBox(height: 40),
+              const SizedBox(height: 100), // Space for bottom nav
             ],
           );
         },
       ),
-    );
-  }
-
-  Widget _buildProUpgradeCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingLarge),
-      decoration: BoxDecoration(
-        color: const Color(0xFF87CEEB),
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                'Get Full Access',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  'PRO',
-                  style: TextStyle(
-                    color: AppTheme.primaryBlue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Analyze your progress in detail, customize your goals and get support with reminders. Focus on your health with ad-free experience',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppTheme.primaryBlue,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: const Text(
-                'Try Now',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -150,10 +111,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     AppState appState,
   ) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingMedium),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
         onTap: () {
@@ -166,15 +127,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
         child: Row(
           children: [
+            // Profile Image/Circle
             CircleAvatar(
               radius: 30,
-              backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+              backgroundColor: const Color(0xFF0066B3).withOpacity(0.1),
               child: Text(
-                child?.name.substring(0, 1) ?? 'C',
+                child?.name.substring(0, 1).toUpperCase() ?? 'E',
                 style: const TextStyle(
-                  fontSize: 32,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryBlue,
+                  color: Color(0xFF0066B3),
                 ),
               ),
             ),
@@ -184,26 +146,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    child?.name ?? 'Child Name',
+                    child?.name ?? 'Emily Ross',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     child != null 
-                        ? '${child.formattedAge} old'
-                        : 'Add child information',
-                    style: TextStyle(
+                        ? child.formattedAge
+                        : 'Edit profile name, age and more',
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: AppTheme.textSecondary,
+                      color: Color(0xFF757575),
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right),
+            const Icon(
+              Icons.chevron_right,
+              color: Color(0xFF757575),
+            ),
           ],
         ),
       ),
@@ -212,10 +178,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProgressSummary(BuildContext context, AppState appState) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingLarge),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,77 +191,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 16),
           
-          // Overall progress
+          // Overall Completion
           Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Overall Completion',
                       style: TextStyle(
-                        color: Colors.grey[600],
                         fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: appState.overallCompletion / 100,
-                        backgroundColor: Colors.grey[200],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          appState.overallCompletion == 100
-                              ? AppTheme.success
-                              : AppTheme.primaryBlue,
-                        ),
-                        minHeight: 10,
+                        color: Color(0xFF757575),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
               Text(
                 '${appState.overallCompletion.toInt()}%',
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryBlue,
+                  color: Color(0xFF0066B3),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           
-          // Stats row
+          // Progress Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: appState.overallCompletion / 100,
+              backgroundColor: const Color(0xFFE0E0E0),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0066B3)),
+              minHeight: 8,
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          // Stats Row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatItem(
-                'Completed',
-                '${appState.totalDosesCompleted}',
-                AppTheme.success,
-                Icons.check_circle,
+              Expanded(
+                child: _buildStatColumn(
+                  Icons.check_circle,
+                  '${appState.totalDosesCompleted}',
+                  'Completed',
+                  const Color(0xFF4CAF50),
+                ),
               ),
-              Container(width: 1, height: 40, color: Colors.grey[300]),
-              _buildStatItem(
-                'Total Doses',
-                '${appState.totalDosesRequired}',
-                AppTheme.info,
-                Icons.vaccines,
+              Container(width: 1, height: 50, color: const Color(0xFFE0E0E0)),
+              Expanded(
+                child: _buildStatColumn(
+                  Icons.vaccines,
+                  '${appState.totalDosesRequired}',
+                  'Total Doses',
+                  const Color(0xFF0066B3),
+                ),
               ),
-              Container(width: 1, height: 40, color: Colors.grey[300]),
-              _buildStatItem(
-                'Vaccines',
-                '${appState.vaccines.length}',
-                AppTheme.primaryBlue,
-                Icons.medical_services,
+              Container(width: 1, height: 50, color: const Color(0xFFE0E0E0)),
+              Expanded(
+                child: _buildStatColumn(
+                  Icons.medical_services,
+                  '${appState.vaccines.length}',
+                  'Vaccines',
+                  const Color(0xFF0066B3),
+                ),
               ),
             ],
           ),
@@ -304,11 +273,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color color, IconData icon) {
+  Widget _buildStatColumn(IconData icon, String value, String label, Color color) {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Text(
           value,
           style: TextStyle(
@@ -317,28 +286,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: color,
           ),
         ),
+        const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
-            color: Colors.grey[600],
+            color: Color(0xFF757575),
           ),
+          textAlign: TextAlign.center,
         ),
       ],
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
   }
 
@@ -346,34 +303,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.notifications, color: AppTheme.primaryBlue),
-            title: const Text('Reminders'),
-            trailing: const Icon(Icons.chevron_right),
+            leading: const Icon(Icons.notifications, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Reminders',
+              style: TextStyle(fontSize: 16),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
             onTap: () {
               Navigator.pushNamed(context, '/reminders');
             },
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications_active, color: AppTheme.primaryBlue),
-            title: const Text('Push Notifications'),
-            subtitle: const Text('Get reminded about upcoming doses'),
-            value: appState.notificationsEnabled,
-            onChanged: (value) {
-              appState.toggleNotifications(value);
-            },
-          ),
-          const Divider(height: 1),
+          const Divider(height: 1, indent: 56),
           ListTile(
-            leading: const Icon(Icons.language, color: AppTheme.primaryBlue),
-            title: const Text('Language'),
-            subtitle: const Text('English'),
-            trailing: const Icon(Icons.chevron_right),
+            leading: const Icon(Icons.notifications_active, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Push Notifications',
+              style: TextStyle(fontSize: 16),
+            ),
+            subtitle: const Text(
+              'Get reminded about upcoming doses',
+              style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            trailing: Switch(
+              value: appState.notificationsEnabled,
+              onChanged: (value) {
+                appState.toggleNotifications(value);
+              },
+              activeColor: const Color(0xFF0066B3),
+            ),
+          ),
+          const Divider(height: 1, indent: 56),
+          ListTile(
+            leading: const Icon(Icons.language, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Language',
+              style: TextStyle(fontSize: 16),
+            ),
+            subtitle: const Text(
+              'English',
+              style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
             onTap: () {
               Navigator.pushNamed(context, '/multilingual');
             },
@@ -387,39 +362,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.upload_file, color: AppTheme.primaryBlue),
-            title: const Text('Export Data'),
-            subtitle: const Text('Backup your vaccination records'),
-            trailing: const Icon(Icons.chevron_right),
+            leading: const Icon(Icons.file_upload, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Export Data',
+              style: TextStyle(fontSize: 16),
+            ),
+            subtitle: const Text(
+              'Backup your vaccination records',
+              style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
             onTap: () => _exportData(context, appState),
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, indent: 56),
           ListTile(
-            leading: const Icon(Icons.download, color: AppTheme.primaryBlue),
-            title: const Text('Import Data'),
-            subtitle: const Text('Restore from backup'),
-            trailing: const Icon(Icons.chevron_right),
+            leading: const Icon(Icons.file_download, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Import Data',
+              style: TextStyle(fontSize: 16),
+            ),
+            subtitle: const Text(
+              'Restore from backup',
+              style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
             onTap: () => _importData(context, appState),
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, indent: 56),
           ListTile(
-            leading: const Icon(Icons.refresh, color: AppTheme.warning),
-            title: const Text('Reset to Sample Data'),
-            subtitle: const Text('For testing purposes'),
-            trailing: const Icon(Icons.chevron_right),
+            leading: const Icon(Icons.refresh, color: Color(0xFFFFA726)),
+            title: const Text(
+              'Reset to Sample Data',
+              style: TextStyle(fontSize: 16),
+            ),
+            subtitle: const Text(
+              'For testing purposes',
+              style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
             onTap: () => _resetToSampleData(context, appState),
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, indent: 56),
           ListTile(
-            leading: const Icon(Icons.delete_forever, color: AppTheme.error),
-            title: const Text('Clear All Data'),
-            subtitle: const Text('Delete all records'),
-            trailing: const Icon(Icons.chevron_right),
+            leading: const Icon(Icons.delete_forever, color: Color(0xFFEF5350)),
+            title: const Text(
+              'Clear All Data',
+              style: TextStyle(fontSize: 16),
+            ),
+            subtitle: const Text(
+              'Delete all records',
+              style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
             onTap: () => _clearAllData(context, appState),
           ),
         ],
@@ -431,84 +430,160 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.help_outline, color: AppTheme.primaryBlue),
-            title: const Text('Help & Support'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            leading: const Icon(Icons.help_outline, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Help & Support',
+              style: TextStyle(fontSize: 16),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SupportScreen(type: SupportPageType.help),
+                ),
+              );
+            },
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, indent: 56),
           ListTile(
-            leading: const Icon(Icons.info_outline, color: AppTheme.primaryBlue),
-            title: const Text('About'),
-            subtitle: const Text('Version 1.0.0'),
-            trailing: const Icon(Icons.chevron_right),
+            leading: const Icon(Icons.info_outline, color: Color(0xFF0066B3)),
+            title: const Text(
+              'About',
+              style: TextStyle(fontSize: 16),
+            ),
+            subtitle: const Text(
+              'Version 1.0.0',
+              style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
             onTap: () => _showAboutDialog(context),
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, indent: 56),
           ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined, color: AppTheme.primaryBlue),
-            title: const Text('Privacy Policy'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            leading: const Icon(Icons.privacy_tip_outlined, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Privacy Policy',
+              style: TextStyle(fontSize: 16),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SupportScreen(type: SupportPageType.privacy),
+                ),
+              );
+            },
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, indent: 56),
           ListTile(
-            leading: const Icon(Icons.description_outlined, color: AppTheme.primaryBlue),
-            title: const Text('Terms of Use'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            leading: const Icon(Icons.description_outlined, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Terms of Use',
+              style: TextStyle(fontSize: 16),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SupportScreen(type: SupportPageType.terms),
+                ),
+              );
+            },
+          ),
+          const Divider(height: 1, indent: 56),
+          ListTile(
+            leading: const Icon(Icons.contact_mail, color: Color(0xFF0066B3)),
+            title: const Text(
+              'Contact Us',
+              style: TextStyle(fontSize: 16),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SupportScreen(type: SupportPageType.contact),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  void _showMoreOptions(BuildContext context) {
-    // TODO: Implement more options
+  Widget _buildBottomNavBar() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildNavIcon(Icons.track_changes, 0, '/tracking'),
+          _buildNavIcon(Icons.person, 1, null), // Current screen
+          _buildNavIcon(Icons.home, 2, '/home'),
+          _buildNavIcon(Icons.medical_services, 3, '/educational'),
+          _buildNavIcon(Icons.assignment, 4, '/reminders'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavIcon(IconData icon, int index, String? route) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () {
+        if (route != null) {
+          Navigator.pushNamed(context, route);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          icon,
+          color: isSelected ? const Color(0xFF0066B3) : const Color(0xFF757575),
+          size: 28,
+        ),
+      ),
+    );
   }
 
   Future<void> _exportData(BuildContext context, AppState appState) async {
     final jsonData = await appState.exportData();
-    if (jsonData != null) {
-      // TODO: Share or save the JSON file
+    if (jsonData != null && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Data exported successfully!'),
-          backgroundColor: AppTheme.success,
+          backgroundColor: Color(0xFF4CAF50),
         ),
       );
-      // For now, just show the data in a dialog
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Export Data'),
-            content: SingleChildScrollView(
-              child: Text(jsonData),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        );
-      }
     }
   }
 
   Future<void> _importData(BuildContext context, AppState appState) async {
-    // TODO: Implement file picker to import JSON
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Import feature coming soon!'),
-        backgroundColor: AppTheme.info,
+        backgroundColor: Color(0xFF0066B3),
       ),
     );
   }
@@ -519,7 +594,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Reset to Sample Data?'),
         content: const Text(
-          'This will replace your current data with sample vaccination records. This action cannot be undone.',
+          'This will replace your current data with sample vaccination records.',
         ),
         actions: [
           TextButton(
@@ -529,7 +604,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.warning,
+              backgroundColor: const Color(0xFFFFA726),
             ),
             child: const Text('Reset'),
           ),
@@ -542,7 +617,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Data reset to sample data'),
-          backgroundColor: AppTheme.success,
+          backgroundColor: Color(0xFF4CAF50),
         ),
       );
     }
@@ -554,7 +629,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Clear All Data?'),
         content: const Text(
-          'This will permanently delete all vaccination records and settings. This action cannot be undone.',
+          'This will permanently delete all vaccination records and settings.',
         ),
         actions: [
           TextButton(
@@ -564,7 +639,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.error,
+              backgroundColor: const Color(0xFFEF5350),
             ),
             child: const Text('Delete All'),
           ),
@@ -577,7 +652,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('All data has been cleared'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: Color(0xFFEF5350),
         ),
       );
     }
@@ -591,11 +666,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       applicationIcon: const Icon(
         Icons.vaccines,
         size: 48,
-        color: AppTheme.primaryBlue,
+        color: Color(0xFF0066B3),
       ),
       children: [
         const Text(
-          'A comprehensive child immunization tracking application to help parents keep track of their children\'s vaccination schedules.',
+          'A comprehensive child immunization tracking application.',
         ),
       ],
     );
