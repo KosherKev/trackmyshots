@@ -78,12 +78,12 @@ class _ChildInformationScreenState extends State<ChildInformationScreen> {
         updatedAt: DateTime.now(),
       );
 
-      // In a real flow, we would go to Schedule Confirmation
-      // For now, we will complete onboarding directly to test
+      // Complete onboarding initial step (save child & generate schedule)
       final appState = Provider.of<AppState>(context, listen: false);
       appState.completeOnboarding(newChild);
       
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      // Navigate to Schedule Confirmation
+      Navigator.pushNamedAndRemoveUntil(context, '/schedule-confirmation', (route) => false);
     } else if (_selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a date of birth')),

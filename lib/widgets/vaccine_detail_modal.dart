@@ -660,8 +660,8 @@ class _MarkDoseDialogState extends State<MarkDoseDialog> {
           onPressed: () {
             final appState = Provider.of<AppState>(context, listen: false);
             appState.updateVaccineDose(
-              vaccineId: widget.vaccine.id,
-              doseId: widget.dose.id,
+              widget.vaccine.id,
+              widget.dose.id,
               isAdministered: true,
               administeredDate: selectedDate,
               administeredBy: _doctorController.text.isNotEmpty 

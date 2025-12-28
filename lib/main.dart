@@ -12,6 +12,7 @@ import 'package:trackmyshots/screens/multilingual_screen.dart';
 import 'package:trackmyshots/screens/progress_feedback_screen.dart';
 import 'package:trackmyshots/screens/onboarding_welcome_screen.dart';
 import 'package:trackmyshots/screens/child_information_screen.dart';
+import 'package:trackmyshots/screens/schedule_confirmation_screen.dart';
 
 void main() {
   runApp(
@@ -43,6 +44,7 @@ class TrackMyShotsApp extends StatelessWidget {
         '/progress': (context) => const ProgressFeedbackScreen(),
         '/onboarding': (context) => const OnboardingWelcomeScreen(),
         '/child-info': (context) => const ChildInformationScreen(),
+        '/schedule-confirmation': (context) => const ScheduleConfirmationScreen(),
       },
     );
   }

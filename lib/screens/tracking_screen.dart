@@ -218,94 +218,99 @@ class _TrackingScreenState extends State<TrackingScreen> {
         final dose = doseInfo['dose'] as VaccineDose;
         final daysUntil = doseInfo['daysUntil'] as int;
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(AppTheme.paddingMedium),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-            border: Border.all(
-              color: daysUntil < 0 
-                  ? AppTheme.error.withOpacity(0.3)
-                  : daysUntil <= 7
-                      ? AppTheme.warning.withOpacity(0.3)
-                      : AppTheme.info.withOpacity(0.3),
-              width: 2,
+        return GestureDetector(
+          onTap: () {
+            showVaccineDetailModal(context, vaccine);
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(AppTheme.paddingMedium),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+              border: Border.all(
+                color: daysUntil < 0 
+                    ? AppTheme.error.withOpacity(0.3)
+                    : daysUntil <= 7
+                        ? AppTheme.warning.withOpacity(0.3)
+                        : AppTheme.info.withOpacity(0.3),
+                width: 2,
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: daysUntil < 0
-                      ? AppTheme.error.withOpacity(0.1)
-                      : daysUntil <= 7
-                          ? AppTheme.warning.withOpacity(0.1)
-                          : AppTheme.info.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: daysUntil < 0
+                        ? AppTheme.error.withOpacity(0.1)
+                        : daysUntil <= 7
+                            ? AppTheme.warning.withOpacity(0.1)
+                            : AppTheme.info.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    daysUntil < 0 
+                        ? Icons.warning 
+                        : Icons.vaccines,
+                    color: daysUntil < 0
+                        ? AppTheme.error
+                        : daysUntil <= 7
+                            ? AppTheme.warning
+                            : AppTheme.info,
+                  ),
                 ),
-                child: Icon(
-                  daysUntil < 0 
-                      ? Icons.warning 
-                      : Icons.vaccines,
-                  color: daysUntil < 0
-                      ? AppTheme.error
-                      : daysUntil <= 7
-                          ? AppTheme.warning
-                          : AppTheme.info,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${vaccine.name} - Dose ${dose.doseNumber}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${vaccine.name} - Dose ${dose.doseNumber}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      dose.scheduledDate != null
-                          ? 'Scheduled: ${_formatScheduledDate(dose.scheduledDate!)}'
-                          : 'Not scheduled',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
+                      const SizedBox(height: 4),
+                      Text(
+                        dose.scheduledDate != null
+                            ? 'Scheduled: ${_formatScheduledDate(dose.scheduledDate!)}'
+                            : 'Not scheduled',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+                if (daysUntil < 0)
+                  Chip(
+                    label: const Text(
+                      'Overdue',
+                      style: TextStyle(color: Colors.white, fontSize: 12),
                     ),
-                  ],
-                ),
-              ),
-              if (daysUntil < 0)
-                Chip(
-                  label: const Text(
-                    'Overdue',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
+                    backgroundColor: AppTheme.error,
+                  )
+                else if (daysUntil <= 7)
+                  Chip(
+                    label: Text(
+                      '$daysUntil days',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                    backgroundColor: AppTheme.warning,
+                  )
+                else
+                  Chip(
+                    label: Text(
+                      '${(daysUntil / 7).ceil()} weeks',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    backgroundColor: AppTheme.info.withOpacity(0.2),
                   ),
-                  backgroundColor: AppTheme.error,
-                )
-              else if (daysUntil <= 7)
-                Chip(
-                  label: Text(
-                    '$daysUntil days',
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                  backgroundColor: AppTheme.warning,
-                )
-              else
-                Chip(
-                  label: Text(
-                    '${(daysUntil / 7).ceil()} weeks',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  backgroundColor: AppTheme.info.withOpacity(0.2),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       }).toList(),

@@ -112,6 +112,75 @@ class AppState extends ChangeNotifier {
     await _saveToStorage();
   }
 
+  // Update a specific vaccine dose
+  Future<void> updateVaccineDose(String vaccineId, String doseId, {
+    bool? isAdministered,
+    DateTime? administeredDate,
+    String? notes,
+    String? batchNumber,
+    String? administeredBy,
+  }) async {
+    final vaccineIndex = _vaccines.indexWhere((v) => v.id == vaccineId);
+    if (vaccineIndex == -1) return;
+
+    final vaccine = _vaccines[vaccineIndex];
+    final doseIndex = vaccine.doses.indexWhere((d) => d.id == doseId);
+    if (doseIndex == -1) return;
+
+    final currentDose = vaccine.doses[doseIndex];
+    final updatedDose = currentDose.copyWith(
+      isAdministered: isAdministered,
+      administeredDate: administeredDate,
+      notes: notes,
+      batchNumber: batchNumber,
+      administeredBy: administeredBy,
+    );
+
+    final updatedDoses = List<VaccineDose>.from(vaccine.doses);
+    updatedDoses[doseIndex] = updatedDose;
+
+    final updatedVaccine = vaccine.copyWith(doses: updatedDoses);
+    _vaccines[vaccineIndex] = updatedVaccine;
+
+    notifyListeners();
+    await _storage.saveVaccines(_vaccines);
+  }
+
+  // Batch update doses (e.g. from Schedule Confirmation)
+  Future<void> batchUpdateDoses(List<Map<String, dynamic>> updates) async {
+    bool hasChanges = false;
+
+    for (final update in updates) {
+      final vaccineId = update['vaccineId'] as String;
+      final doseId = update['doseId'] as String;
+      
+      final vaccineIndex = _vaccines.indexWhere((v) => v.id == vaccineId);
+      if (vaccineIndex == -1) continue;
+
+      final vaccine = _vaccines[vaccineIndex];
+      final doseIndex = vaccine.doses.indexWhere((d) => d.id == doseId);
+      if (doseIndex == -1) continue;
+
+      final currentDose = vaccine.doses[doseIndex];
+      final updatedDose = currentDose.copyWith(
+        isAdministered: update['isAdministered'] as bool?,
+        administeredDate: update['administeredDate'] as DateTime?,
+      );
+
+      final updatedDoses = List<VaccineDose>.from(vaccine.doses);
+      updatedDoses[doseIndex] = updatedDose;
+
+      final updatedVaccine = vaccine.copyWith(doses: updatedDoses);
+      _vaccines[vaccineIndex] = updatedVaccine;
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
+      notifyListeners();
+      await _storage.saveVaccines(_vaccines);
+    }
+  }
+
   // Load from storage
   Future<void> _loadFromStorage() async {
     final child = await _storage.loadChildProfile();
@@ -156,38 +225,7 @@ class AppState extends ChangeNotifier {
     await _storage.saveChildProfile(child);
   }
 
-  // Update vaccine dose
-  Future<void> updateVaccineDose({
-    required String vaccineId,
-    required String doseId,
-    required bool isAdministered,
-    DateTime? administeredDate,
-    String? administeredBy,
-    String? batchNumber,
-    String? notes,
-  }) async {
-    final vaccineIndex = _vaccines.indexWhere((v) => v.id == vaccineId);
-    if (vaccineIndex == -1) return;
 
-    final vaccine = _vaccines[vaccineIndex];
-    final doseIndex = vaccine.doses.indexWhere((d) => d.id == doseId);
-    if (doseIndex == -1) return;
-
-    final updatedDose = vaccine.doses[doseIndex].copyWith(
-      isAdministered: isAdministered,
-      administeredDate: administeredDate,
-      administeredBy: administeredBy,
-      batchNumber: batchNumber,
-      notes: notes,
-    );
-
-    final updatedDoses = List<VaccineDose>.from(vaccine.doses);
-    updatedDoses[doseIndex] = updatedDose;
-
-    _vaccines[vaccineIndex] = vaccine.copyWith(doses: updatedDoses);
-    notifyListeners();
-    await _storage.saveVaccines(_vaccines);
-  }
 
   // Add appointment
   Future<void> addAppointment(Appointment appointment) async {
