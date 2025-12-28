@@ -218,17 +218,27 @@ class StorageService {
   // Export data as JSON string (for backup)
   Future<String?> exportData() async {
     try {
-      final child = await loadChildProfile();
-      final vaccines = await loadVaccines();
-      final appointments = await loadAppointments();
+      final children = await loadChildren();
+      final selectedChildId = await loadSelectedChildId();
       final settings = await loadSettings();
 
+      final Map<String, dynamic> perChildData = {};
+
+      for (final child in children) {
+        final vaccines = await loadVaccines(childId: child.id);
+        final appointments = await loadAppointments(childId: child.id);
+        perChildData[child.id] = {
+          'vaccines': vaccines?.map((v) => v.toJson()).toList(),
+          'appointments': appointments?.map((a) => a.toJson()).toList(),
+        };
+      }
+
       final exportData = {
-        'version': '1.0',
+        'version': '2.0',
         'exportDate': DateTime.now().toIso8601String(),
-        'child': child?.toJson(),
-        'vaccines': vaccines?.map((v) => v.toJson()).toList(),
-        'appointments': appointments?.map((a) => a.toJson()).toList(),
+        'children': children.map((c) => c.toJson()).toList(),
+        'selectedChildId': selectedChildId,
+        'perChildData': perChildData,
         'settings': settings,
       };
 
@@ -243,30 +253,64 @@ class StorageService {
   Future<bool> importData(String jsonString) async {
     try {
       final data = jsonDecode(jsonString) as Map<String, dynamic>;
-      
-      // Import child
-      if (data['child'] != null) {
-        final child = ChildProfile.fromJson(data['child']);
-        await saveChildProfile(child);
+      final version = data['version'] as String? ?? '1.0';
+
+      if (version == '2.0') {
+        // Import V2 (Multi-profile)
+        if (data['children'] != null) {
+          final childrenList = (data['children'] as List)
+              .map((c) => ChildProfile.fromJson(c))
+              .toList();
+          await saveChildren(childrenList);
+        }
+        
+        if (data['selectedChildId'] != null) {
+          await saveSelectedChildId(data['selectedChildId']);
+        }
+
+        if (data['perChildData'] != null) {
+          final perChildData = data['perChildData'] as Map<String, dynamic>;
+          for (final entry in perChildData.entries) {
+            final childId = entry.key;
+            final childData = entry.value as Map<String, dynamic>;
+
+            if (childData['vaccines'] != null) {
+              final vaccines = (childData['vaccines'] as List)
+                  .map((v) => Vaccine.fromJson(v))
+                  .toList();
+              await saveVaccines(vaccines, childId: childId);
+            }
+            if (childData['appointments'] != null) {
+              final appointments = (childData['appointments'] as List)
+                  .map((a) => Appointment.fromJson(a))
+                  .toList();
+              await saveAppointments(appointments, childId: childId);
+            }
+          }
+        }
+      } else {
+        // Import V1 (Legacy / Single profile)
+        if (data['child'] != null) {
+          final child = ChildProfile.fromJson(data['child']);
+          await saveChildProfile(child);
+        }
+
+        if (data['vaccines'] != null) {
+          final vaccines = (data['vaccines'] as List)
+              .map((json) => Vaccine.fromJson(json))
+              .toList();
+          await saveVaccines(vaccines); // Uses legacy key or falls back
+        }
+
+        if (data['appointments'] != null) {
+          final appointments = (data['appointments'] as List)
+              .map((json) => Appointment.fromJson(json))
+              .toList();
+          await saveAppointments(appointments);
+        }
       }
 
-      // Import vaccines
-      if (data['vaccines'] != null) {
-        final vaccines = (data['vaccines'] as List)
-            .map((json) => Vaccine.fromJson(json))
-            .toList();
-        await saveVaccines(vaccines);
-      }
-
-      // Import appointments
-      if (data['appointments'] != null) {
-        final appointments = (data['appointments'] as List)
-            .map((json) => Appointment.fromJson(json))
-            .toList();
-        await saveAppointments(appointments);
-      }
-
-      // Import settings
+      // Import settings (Common)
       if (data['settings'] != null) {
         await saveSettings(data['settings']);
       }

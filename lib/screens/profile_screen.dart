@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:trackmyshots/theme/app_theme.dart';
 import 'package:trackmyshots/services/app_state.dart';
 import 'package:trackmyshots/models/models.dart';
+import 'package:trackmyshots/screens/support_screen.dart';
 import 'package:trackmyshots/widgets/edit_child_dialog.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:trackmyshots/screens/support_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -545,24 +547,192 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _exportData(BuildContext context, AppState appState) async {
-    final jsonData = await appState.exportData();
-    if (jsonData != null && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Data exported successfully!'),
-          backgroundColor: Color(0xFF4CAF50),
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final password = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Export Encrypted Backup'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Enter a password to encrypt your backup file. You will need this password to restore it.',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a password';
+                  }
+                  if (value.length < 4) {
+                    return 'Password must be at least 4 characters';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(context, passwordController.text);
+              }
+            },
+            child: const Text('Export'),
+          ),
+        ],
+      ),
+    );
+
+    if (password != null && context.mounted) {
+      try {
+        await appState.exportEncryptedData(password);
+        // share_plus handles the UI feedback for success usually (opens share sheet)
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Export failed: $e'),
+              backgroundColor: const Color(0xFFEF5350),
+            ),
+          );
+        }
+      }
     }
   }
 
   Future<void> _importData(BuildContext context, AppState appState) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Import feature coming soon!'),
-        backgroundColor: Color(0xFF0066B3),
-      ),
-    );
+    try {
+      final result = await FilePicker.platform.pickFiles();
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+
+        if (!context.mounted) return;
+
+        final passwordController = TextEditingController();
+        final formKey = GlobalKey<FormState>();
+
+        final password = await showDialog<String>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Decrypt Backup'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Enter the password for this backup file.',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.lock_open),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter password';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    Navigator.pop(context, passwordController.text);
+                  }
+                },
+                child: const Text('Restore'),
+              ),
+            ],
+          ),
+        );
+
+        if (password != null && context.mounted) {
+          // Show loading
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const Center(child: CircularProgressIndicator()),
+          );
+
+          try {
+            final success = await appState.importEncryptedData(file, password);
+            
+            if (context.mounted) {
+              Navigator.pop(context); // Dismiss loading
+              
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Data restored successfully!'),
+                    backgroundColor: Color(0xFF4CAF50),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Failed to restore data. File might be corrupted.'),
+                    backgroundColor: Color(0xFFEF5350),
+                  ),
+                );
+              }
+            }
+          } catch (e) {
+            if (context.mounted) {
+              Navigator.pop(context); // Dismiss loading
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(e.toString().replaceAll('Exception: ', '')),
+                  backgroundColor: const Color(0xFFEF5350),
+                ),
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking file: $e'),
+            backgroundColor: const Color(0xFFEF5350),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _resetToSampleData(BuildContext context, AppState appState) async {

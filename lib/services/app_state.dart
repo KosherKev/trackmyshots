@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:trackmyshots/models/models.dart';
 import 'package:trackmyshots/services/sample_data_service.dart';
 import 'package:trackmyshots/services/storage_service.dart';
 import 'package:trackmyshots/services/notification_service.dart';
+import 'package:trackmyshots/services/backup_service.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AppState extends ChangeNotifier {
   final StorageService _storage = StorageService();
@@ -428,6 +431,23 @@ class AppState extends ChangeNotifier {
     return await _storage.exportData();
   }
 
+  // Export encrypted data
+  Future<void> exportEncryptedData(String password) async {
+    final jsonString = await _storage.exportData();
+    if (jsonString != null) {
+      final file = await BackupService.createEncryptedBackup(
+        jsonData: jsonString,
+        password: password,
+      );
+      // Use share_plus to export
+      await Share.shareXFiles(
+        [XFile(file.path)], 
+        text: 'TrackMyShots Encrypted Backup',
+        subject: 'TrackMyShots Backup',
+      );
+    }
+  }
+
   // Import data
   Future<bool> importData(String jsonString) async {
     final success = await _storage.importData(jsonString);
@@ -435,6 +455,20 @@ class AppState extends ChangeNotifier {
       await initialize(); // Re-initialize to reload data
     }
     return success;
+  }
+
+  // Import encrypted data
+  Future<bool> importEncryptedData(File file, String password) async {
+    try {
+      final content = await file.readAsString();
+      final jsonString = BackupService.decryptBackup(
+        fileContent: content,
+        password: password,
+      );
+      return await importData(jsonString);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   // Reset to sample data (Debug only)
