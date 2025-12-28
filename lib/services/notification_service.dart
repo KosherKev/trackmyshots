@@ -55,11 +55,29 @@ class NotificationService {
           if (kDebugMode) {
             print('Notification tapped: ${response.payload}');
           }
-          // Navigate to tracking screen
-          navigatorKey.currentState?.pushNamed(
-            '/tracking',
-            arguments: response.payload,
-          );
+          
+          final parts = response.payload!.split('|');
+          if (parts.isNotEmpty) {
+            final type = parts[0];
+            final id = parts.length > 1 ? parts[1] : null;
+            
+            if (type == 'appointment' && id != null) {
+              navigatorKey.currentState?.pushNamed(
+                '/appointment-detail',
+                arguments: id,
+              );
+            } else if (type == 'vaccine') {
+              // For vaccines, we go to tracking screen
+              // We could potentially highlight the specific vaccine if we passed that as arg
+              navigatorKey.currentState?.pushNamed(
+                '/tracking',
+                arguments: id, // Optional: pass ID if tracking screen supports it
+              );
+            } else {
+              // Default fallback
+              navigatorKey.currentState?.pushNamed('/tracking');
+            }
+          }
         }
       },
     );

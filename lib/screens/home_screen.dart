@@ -28,7 +28,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void _checkPendingNotification() {
     final payload = NotificationService().pendingPayload;
     if (payload != null) {
-      Navigator.pushNamed(context, '/tracking', arguments: payload);
+      final parts = payload.split('|');
+      if (parts.isNotEmpty) {
+        final type = parts[0];
+        final id = parts.length > 1 ? parts[1] : null;
+
+        if (type == 'appointment' && id != null) {
+          Navigator.pushNamed(context, '/appointment-detail', arguments: id);
+        } else {
+          // Default or vaccine type
+          Navigator.pushNamed(context, '/tracking', arguments: id);
+        }
+      }
     }
   }
 

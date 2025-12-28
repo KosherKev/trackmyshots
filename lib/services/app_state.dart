@@ -114,7 +114,7 @@ class AppState extends ChangeNotifier {
     if (_notificationsEnabled) {
       // Request permissions first time
       await _notificationService.requestPermissions();
-      await _scheduleAllReminders();
+      await refreshReminders();
     }
     
     notifyListeners();
@@ -155,6 +155,7 @@ class AppState extends ChangeNotifier {
 
     notifyListeners();
     await _storage.saveVaccines(_vaccines);
+    await refreshReminders();
   }
 
   // Batch update doses (e.g. from Schedule Confirmation)
@@ -189,6 +190,7 @@ class AppState extends ChangeNotifier {
     if (hasChanges) {
       notifyListeners();
       await _storage.saveVaccines(_vaccines);
+      await refreshReminders();
     }
   }
 
@@ -243,6 +245,7 @@ class AppState extends ChangeNotifier {
     _appointments.add(appointment);
     notifyListeners();
     await _storage.saveAppointments(_appointments);
+    await refreshReminders();
   }
 
   // Update appointment
@@ -260,6 +263,7 @@ class AppState extends ChangeNotifier {
     _appointments.removeWhere((a) => a.id == appointmentId);
     notifyListeners();
     await _storage.saveAppointments(_appointments);
+    await refreshReminders();
   }
 
   // Toggle notifications
@@ -320,56 +324,125 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Schedule all reminders
-  Future<void> _scheduleAllReminders() async {
-    if (!_notificationsEnabled) return;
+  // Schedule all reminders (Public Refresh Method)
+  Future<void> refreshReminders() async {
+    if (!_notificationsEnabled) {
+      await _notificationService.cancelAllNotifications();
+      return;
+    }
     
     await _notificationService.cancelAllNotifications();
     
+    // 1. Identify doses linked to upcoming appointments
+    final Set<String> linkedDoseIds = {};
+    for (final apt in _appointments) {
+      if (apt.status != AppointmentStatus.cancelled && 
+          apt.status != AppointmentStatus.completed &&
+          apt.status != AppointmentStatus.noShow) {
+            
+        for (final link in apt.linkedVaccines) {
+          linkedDoseIds.add('${link.vaccineId}|${link.doseId}');
+        }
+        
+        // Schedule Appointment Reminders
+        await _scheduleAppointmentReminders(apt);
+      }
+    }
+    
+    // 2. Schedule Vaccine Due Reminders (for those NOT linked)
     for (final vaccine in _vaccines) {
        for (final dose in vaccine.doses) {
-         if (!dose.isAdministered && dose.scheduledDate != null) {
-           await _scheduleReminderForDose(vaccine, dose);
+         final key = '${vaccine.id}|${dose.id}';
+         
+         if (!dose.isAdministered && dose.scheduledDate != null && !linkedDoseIds.contains(key)) {
+           await _scheduleVaccineReminders(vaccine, dose);
          }
        }
      }
-   }
- 
-   // Update reminder for a specific dose
-   Future<void> _updateReminderForDose(Vaccine vaccine, VaccineDose dose) async {
-     final notificationId = dose.id.hashCode;
-     await _notificationService.cancelNotification(notificationId);
-     
-     if (!dose.isAdministered && dose.scheduledDate != null && _notificationsEnabled) {
-       await _scheduleReminderForDose(vaccine, dose);
-     }
-   }
+  }
 
-  // Schedule reminder for a dose
-  Future<void> _scheduleReminderForDose(Vaccine vaccine, VaccineDose dose) async {
-    if (dose.scheduledDate == null) return;
-    
-    final notificationId = dose.id.hashCode;
-    final scheduledDate = dose.scheduledDate!;
-    
-    // Remind 1 day before at 9:00 AM
-    final reminderDate = DateTime(
-      scheduledDate.year,
-      scheduledDate.month,
-      scheduledDate.day,
-      9, // 9 AM
-      0,
-    ).subtract(const Duration(days: 1));
-        
-    // Only schedule if in future
-    if (reminderDate.isAfter(DateTime.now())) {
+  // Schedule reminders for a specific appointment
+  Future<void> _scheduleAppointmentReminders(Appointment apt) async {
+    if (apt.dateTime.isBefore(DateTime.now())) return;
+
+    // 24 Hours Before
+    final remind24h = apt.dateTime.subtract(const Duration(hours: 24));
+    if (remind24h.isAfter(DateTime.now())) {
       await _notificationService.scheduleNotification(
-        id: notificationId,
-        title: 'Upcoming Vaccination',
-        body: '${vaccine.name} (Dose ${dose.doseNumber}) is due tomorrow.',
-        scheduledDate: reminderDate,
-        payload: '${vaccine.id}|${dose.id}',
+        id: _generateNotificationId('${apt.id}_24h'),
+        title: 'Upcoming Appointment',
+        body: 'Appointment with ${apt.doctorName} tomorrow at ${apt.formattedTime}.',
+        scheduledDate: remind24h,
+        payload: 'appointment|${apt.id}',
       );
     }
+
+    // 2 Hours Before
+    final remind2h = apt.dateTime.subtract(const Duration(hours: 2));
+    if (remind2h.isAfter(DateTime.now())) {
+      await _notificationService.scheduleNotification(
+        id: _generateNotificationId('${apt.id}_2h'),
+        title: 'Appointment Soon',
+        body: 'You have an appointment in 2 hours with ${apt.doctorName}.',
+        scheduledDate: remind2h,
+        payload: 'appointment|${apt.id}',
+      );
+    }
+  }
+
+  // Schedule reminders for a specific vaccine dose
+  Future<void> _scheduleVaccineReminders(Vaccine vaccine, VaccineDose dose) async {
+    if (dose.scheduledDate == null) return;
+    
+    final scheduledDate = dose.scheduledDate!;
+    
+    // 7 Days Before
+    final remind7d = scheduledDate.subtract(const Duration(days: 7));
+    // Set to 9 AM
+    final remind7dTime = DateTime(remind7d.year, remind7d.month, remind7d.day, 9, 0);
+    
+    if (remind7dTime.isAfter(DateTime.now())) {
+      await _notificationService.scheduleNotification(
+        id: _generateNotificationId('${dose.id}_7d'),
+        title: 'Upcoming Vaccination',
+        body: '${vaccine.name} (Dose ${dose.doseNumber}) is due next week.',
+        scheduledDate: remind7dTime,
+        payload: 'vaccine|${vaccine.id}',
+      );
+    }
+    
+    // 1 Day Before
+    final remind1d = scheduledDate.subtract(const Duration(days: 1));
+    // Set to 9 AM
+    final remind1dTime = DateTime(remind1d.year, remind1d.month, remind1d.day, 9, 0);
+    
+    if (remind1dTime.isAfter(DateTime.now())) {
+      await _notificationService.scheduleNotification(
+        id: _generateNotificationId('${dose.id}_1d'),
+        title: 'Vaccination Due Tomorrow',
+        body: '${vaccine.name} (Dose ${dose.doseNumber}) is due tomorrow. Book an appointment!',
+        scheduledDate: remind1dTime,
+        payload: 'vaccine|${vaccine.id}',
+      );
+    }
+
+    // 1 Week Overdue
+    final overdue1w = scheduledDate.add(const Duration(days: 7));
+    // Set to 9 AM
+    final overdue1wTime = DateTime(overdue1w.year, overdue1w.month, overdue1w.day, 9, 0);
+
+    if (overdue1wTime.isAfter(DateTime.now())) {
+      await _notificationService.scheduleNotification(
+        id: _generateNotificationId('${dose.id}_overdue_1w'),
+        title: 'Vaccination Overdue',
+        body: 'Action Needed: ${vaccine.name} (Dose ${dose.doseNumber}) was due a week ago. Schedule now.',
+        scheduledDate: overdue1wTime,
+        payload: 'vaccine|${vaccine.id}',
+      );
+    }
+  }
+  
+  int _generateNotificationId(String key) {
+    return key.hashCode;
   }
 }

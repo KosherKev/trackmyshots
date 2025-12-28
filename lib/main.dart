@@ -13,6 +13,7 @@ import 'package:trackmyshots/screens/progress_feedback_screen.dart';
 import 'package:trackmyshots/screens/onboarding_welcome_screen.dart';
 import 'package:trackmyshots/screens/child_information_screen.dart';
 import 'package:trackmyshots/screens/schedule_confirmation_screen.dart';
+import 'package:trackmyshots/screens/appointment_detail_screen.dart';
 import 'package:trackmyshots/utils/global_keys.dart';
 
 void main() {
@@ -47,6 +48,17 @@ class TrackMyShotsApp extends StatelessWidget {
         '/onboarding': (context) => const OnboardingWelcomeScreen(),
         '/child-info': (context) => const ChildInformationScreen(),
         '/schedule-confirmation': (context) => const ScheduleConfirmationScreen(),
+        '/appointment-detail': (context) {
+          final appointmentId = ModalRoute.of(context)!.settings.arguments as String;
+          final appState = Provider.of<AppState>(context, listen: false);
+          try {
+            final appointment = appState.appointments.firstWhere((a) => a.id == appointmentId);
+            return AppointmentDetailScreen(appointment: appointment);
+          } catch (e) {
+            // Fallback if appointment not found (e.g. deleted)
+            return const HomeScreen();
+          }
+        },
       },
     );
   }

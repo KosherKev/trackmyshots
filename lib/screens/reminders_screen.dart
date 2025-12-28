@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trackmyshots/widgets/standard_card.dart';
+import 'package:trackmyshots/services/notification_service.dart';
 
 class RemindersScreen extends StatefulWidget {
   const RemindersScreen({super.key});
@@ -72,6 +73,51 @@ class _RemindersScreenState extends State<RemindersScreen> {
           StandardCard(
             text: 'Rotavirus will be given in 5 weeks time',
             centerText: true,
+          ),
+
+          const SizedBox(height: 32),
+          const Text(
+            'Developer Tools',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () async {
+              await NotificationService().scheduleNotification(
+                id: 999,
+                title: 'Test Appointment Reminder',
+                body: 'Tap to see appointment details',
+                scheduledDate: DateTime.now().add(const Duration(seconds: 5)),
+                payload: 'appointment|test_id',
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Notification scheduled in 5 seconds')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            child: const Text('Test Appointment Notification (5s)', style: TextStyle(color: Colors.black)),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () async {
+              await NotificationService().scheduleNotification(
+                id: 998,
+                title: 'Test Overdue Reminder',
+                body: 'Action Needed: Polio is overdue. Schedule now.',
+                scheduledDate: DateTime.now().add(const Duration(seconds: 5)),
+                payload: 'vaccine|test_id',
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Overdue Notification scheduled in 5 seconds')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('Test Overdue Notification (5s)', style: TextStyle(color: Colors.white)),
           ),
           
           const SizedBox(height: 100), // Space for bottom nav
