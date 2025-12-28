@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Image.asset(
-            'assets/images/logo.png',
+            'images/logo.png',
             errorBuilder: (context, error, stackTrace) =>
                 const Icon(Icons.vaccines, color: AppTheme.primaryBlue),
           ),
