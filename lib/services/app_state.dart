@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:trackmyshots/models/models.dart';
 import 'package:trackmyshots/services/sample_data_service.dart';
 import 'package:trackmyshots/services/storage_service.dart';
+import 'package:trackmyshots/services/notification_service.dart';
 
 class AppState extends ChangeNotifier {
   final StorageService _storage = StorageService();
+  final NotificationService _notificationService = NotificationService();
   
   ChildProfile? _currentChild;
   List<Vaccine> _vaccines = [];
@@ -78,6 +80,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await _notificationService.initialize();
       final hasData = await _storage.hasData();
       
       if (hasData) {
@@ -107,6 +110,12 @@ class AppState extends ChangeNotifier {
     
     // Initialize empty appointments
     _appointments = [];
+    
+    if (_notificationsEnabled) {
+      // Request permissions first time
+      await _notificationService.requestPermissions();
+      await _scheduleAllReminders();
+    }
     
     notifyListeners();
     await _saveToStorage();
@@ -307,5 +316,58 @@ class AppState extends ChangeNotifier {
     _appointments = [];
     _notificationsEnabled = true;
     notifyListeners();
+  }
+
+  // Schedule all reminders
+  Future<void> _scheduleAllReminders() async {
+    if (!_notificationsEnabled) return;
+    
+    await _notificationService.cancelAllNotifications();
+    
+    for (final vaccine in _vaccines) {
+       for (final dose in vaccine.doses) {
+         if (!dose.isAdministered && dose.scheduledDate != null) {
+           await _scheduleReminderForDose(vaccine, dose);
+         }
+       }
+     }
+   }
+ 
+   // Update reminder for a specific dose
+   Future<void> _updateReminderForDose(Vaccine vaccine, VaccineDose dose) async {
+     final notificationId = dose.id.hashCode;
+     await _notificationService.cancelNotification(notificationId);
+     
+     if (!dose.isAdministered && dose.scheduledDate != null && _notificationsEnabled) {
+       await _scheduleReminderForDose(vaccine, dose);
+     }
+   }
+
+  // Schedule reminder for a dose
+  Future<void> _scheduleReminderForDose(Vaccine vaccine, VaccineDose dose) async {
+    if (dose.scheduledDate == null) return;
+    
+    final notificationId = dose.id.hashCode;
+    final scheduledDate = dose.scheduledDate!;
+    
+    // Remind 1 day before at 9:00 AM
+    final reminderDate = DateTime(
+      scheduledDate.year,
+      scheduledDate.month,
+      scheduledDate.day,
+      9, // 9 AM
+      0,
+    ).subtract(const Duration(days: 1));
+        
+    // Only schedule if in future
+    if (reminderDate.isAfter(DateTime.now())) {
+      await _notificationService.scheduleNotification(
+        id: notificationId,
+        title: 'Upcoming Vaccination',
+        body: '${vaccine.name} (Dose ${dose.doseNumber}) is due tomorrow.',
+        scheduledDate: reminderDate,
+        payload: '${vaccine.id}|${dose.id}',
+      );
+    }
   }
 }

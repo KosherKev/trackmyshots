@@ -13,6 +13,7 @@ import 'package:trackmyshots/screens/progress_feedback_screen.dart';
 import 'package:trackmyshots/screens/onboarding_welcome_screen.dart';
 import 'package:trackmyshots/screens/child_information_screen.dart';
 import 'package:trackmyshots/screens/schedule_confirmation_screen.dart';
+import 'package:trackmyshots/utils/global_keys.dart';
 
 void main() {
   runApp(
@@ -29,6 +30,7 @@ class TrackMyShotsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'TrackMyShots',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

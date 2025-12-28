@@ -15,6 +15,44 @@ class TrackingScreen extends StatefulWidget {
 class _TrackingScreenState extends State<TrackingScreen> {
   DateTime selectedDate = DateTime.now();
   int _currentIndex = 0; // Tracking tab
+  bool _navigationChecked = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_navigationChecked) {
+      _checkPendingNavigation();
+      _navigationChecked = true;
+    }
+  }
+
+  void _checkPendingNavigation() {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && args is String) {
+      final parts = args.split('|');
+      if (parts.length == 2) {
+        final vaccineId = parts[0];
+        // final doseId = parts[1]; // We can use this later to highlight specific dose
+        
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showVaccineDetails(vaccineId);
+        });
+      }
+    }
+  }
+
+  void _showVaccineDetails(String vaccineId) {
+    final appState = Provider.of<AppState>(context, listen: false);
+    final vaccine = appState.getVaccineById(vaccineId);
+    if (vaccine != null) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => VaccineDetailModal(vaccine: vaccine),
+      );
+    }
+  }
 
   void _previousMonth() {
     setState(() {

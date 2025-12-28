@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trackmyshots/theme/app_theme.dart';
 import 'package:trackmyshots/services/app_state.dart';
+import 'package:trackmyshots/services/notification_service.dart';
 import 'package:trackmyshots/models/models.dart';
 import 'package:trackmyshots/screens/appointment_detail_screen.dart';
 
@@ -14,6 +15,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 2; // Home is at index 2
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPendingNotification();
+    });
+  }
+
+  void _checkPendingNotification() {
+    final payload = NotificationService().pendingPayload;
+    if (payload != null) {
+      Navigator.pushNamed(context, '/tracking', arguments: payload);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

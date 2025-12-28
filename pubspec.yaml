@@ -38,6 +38,7 @@ dependencies:
   
   # Fonts
   google_fonts: ^6.1.0
+  timezone: ^0.9.4
 
 dev_dependencies:
   flutter_test:
