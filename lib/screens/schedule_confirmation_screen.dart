@@ -33,7 +33,7 @@ class _ScheduleConfirmationScreenState extends State<ScheduleConfirmationScreen>
     for (final vaccine in appState.vaccines) {
       for (final dose in vaccine.doses) {
         if (dose.scheduledDate != null && dose.scheduledDate!.isBefore(now)) {
-          final key = '${vaccine.id}_${dose.id}';
+          final key = '${vaccine.id}|${dose.id}';
           // Default to checked if it's in the past
           setState(() {
             _administeredDoses[key] = true;
@@ -48,40 +48,61 @@ class _ScheduleConfirmationScreenState extends State<ScheduleConfirmationScreen>
       _isLoading = true;
     });
 
-    final appState = Provider.of<AppState>(context, listen: false);
-    final updates = <Map<String, dynamic>>[];
+    try {
+      final appState = Provider.of<AppState>(context, listen: false);
+      final updates = <Map<String, dynamic>>[];
 
-    _administeredDoses.forEach((key, isAdministered) {
-      if (isAdministered) {
-        final parts = key.split('_');
-        final vaccineId = parts[0];
-        final doseId = parts[1];
-        
-        // Find the scheduled date to use as administered date (approximate)
-        // or just use today if we don't know
-        DateTime? adminDate;
-        final vaccine = appState.vaccines.firstWhere((v) => v.id == vaccineId);
-        final dose = vaccine.doses.firstWhere((d) => d.id == doseId);
-        adminDate = dose.scheduledDate;
+      for (final entry in _administeredDoses.entries) {
+        if (entry.value) {
+          final key = entry.key;
+          final parts = key.split('|');
+          if (parts.length < 2) continue;
+          
+          final vaccineId = parts[0];
+          final doseId = parts[1];
+          
+          // Find the scheduled date to use as administered date (approximate)
+          // or just use today if we don't know
+          DateTime? adminDate;
+          
+          try {
+            final vaccine = appState.vaccines.firstWhere((v) => v.id == vaccineId);
+            final dose = vaccine.doses.firstWhere((d) => d.id == doseId);
+            adminDate = dose.scheduledDate;
 
-        updates.add({
-          'vaccineId': vaccineId,
-          'doseId': doseId,
-          'isAdministered': true,
-          'administeredDate': adminDate ?? DateTime.now(),
+            updates.add({
+              'vaccineId': vaccineId,
+              'doseId': doseId,
+              'isAdministered': true,
+              'administeredDate': adminDate ?? DateTime.now(),
+            });
+          } catch (e) {
+            print('Error finding vaccine/dose for update: $e');
+            continue;
+          }
+        }
+      }
+
+      if (updates.isNotEmpty) {
+        await appState.batchUpdateDoses(updates);
+      }
+
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      }
+    } catch (e) {
+      print('Error confirming schedule: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving schedule: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
         });
       }
-    });
-
-    if (updates.isNotEmpty) {
-      await appState.batchUpdateDoses(updates);
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     }
   }
 
@@ -100,7 +121,7 @@ class _ScheduleConfirmationScreenState extends State<ScheduleConfirmationScreen>
           pastDoses.add({
             'vaccine': vaccine,
             'dose': dose,
-            'key': '${vaccine.id}_${dose.id}',
+            'key': '${vaccine.id}|${dose.id}',
           });
         }
       }
