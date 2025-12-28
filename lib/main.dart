@@ -10,6 +10,8 @@ import 'package:trackmyshots/screens/profile_screen.dart';
 import 'package:trackmyshots/screens/educational_resources_screen.dart';
 import 'package:trackmyshots/screens/multilingual_screen.dart';
 import 'package:trackmyshots/screens/progress_feedback_screen.dart';
+import 'package:trackmyshots/screens/onboarding_welcome_screen.dart';
+import 'package:trackmyshots/screens/child_information_screen.dart';
 
 void main() {
   runApp(
@@ -39,6 +41,8 @@ class TrackMyShotsApp extends StatelessWidget {
         '/educational': (context) => const EducationalResourcesScreen(),
         '/multilingual': (context) => const MultilingualScreen(),
         '/progress': (context) => const ProgressFeedbackScreen(),
+        '/onboarding': (context) => const OnboardingWelcomeScreen(),
+        '/child-info': (context) => const ChildInformationScreen(),
       },
     );
   }

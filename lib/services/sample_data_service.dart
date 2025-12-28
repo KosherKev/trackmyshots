@@ -9,10 +9,207 @@ class SampleDataService {
     return ChildProfile(
       id: 'child_1',
       name: 'Emily Ross',
+      gender: 'Male',
       dateOfBirth: sixMonthsAgo,
       createdAt: sixMonthsAgo,
       updatedAt: now,
     );
+  }
+
+  // Generate CLEAN vaccine schedule based on child's age (for new users)
+  static List<Vaccine> generateScheduleForChild(ChildProfile child) {
+    final birthDate = child.dateOfBirth;
+    
+    return [
+      // Hepatitis B - 3 doses (at birth, 1-2 months, 6-18 months)
+      Vaccine(
+        id: 'hep_b',
+        name: 'Hepatitis B',
+        shortName: 'H',
+        description: 'Protects against Hepatitis B virus',
+        totalDoses: 3,
+        administrationSchedule: 'At birth, 1-2 months, and 6-18 months',
+        purpose: 'Prevents Hepatitis B infection which can cause liver disease',
+        sideEffects: 'Mild fever, soreness at injection site',
+        doses: [
+          VaccineDose(
+            id: 'hep_b_1',
+            doseNumber: 1,
+            scheduledDate: birthDate,
+            isAdministered: false,
+            ageInWeeks: 0,
+          ),
+          VaccineDose(
+            id: 'hep_b_2',
+            doseNumber: 2,
+            scheduledDate: birthDate.add(const Duration(days: 42)), // 6 weeks
+            isAdministered: false,
+            ageInWeeks: 6,
+          ),
+          VaccineDose(
+            id: 'hep_b_3',
+            doseNumber: 3,
+            scheduledDate: birthDate.add(const Duration(days: 182)), // 26 weeks
+            isAdministered: false,
+            ageInWeeks: 26,
+          ),
+        ],
+      ),
+
+      // Rotavirus - 2 doses (at 6 and 10 weeks)
+      Vaccine(
+        id: 'rotavirus',
+        name: 'Rotavirus',
+        shortName: 'R',
+        description: 'Protects against rotavirus gastroenteritis',
+        totalDoses: 2,
+        administrationSchedule: 'At 6 and 10 weeks of age',
+        purpose: 'Prevents severe diarrhea caused by rotavirus',
+        sideEffects: 'Mild diarrhea, irritability',
+        doses: [
+          VaccineDose(
+            id: 'rota_1',
+            doseNumber: 1,
+            scheduledDate: birthDate.add(const Duration(days: 42)), // 6 weeks
+            isAdministered: false,
+            ageInWeeks: 6,
+          ),
+          VaccineDose(
+            id: 'rota_2',
+            doseNumber: 2,
+            scheduledDate: birthDate.add(const Duration(days: 70)), // 10 weeks
+            isAdministered: false,
+            ageInWeeks: 10,
+          ),
+        ],
+      ),
+
+      // DTP - 4 doses (at 6, 10, 14 weeks, and 15-18 months)
+      Vaccine(
+        id: 'dtp',
+        name: 'DTP (Diphtheria, Tetanus, Pertussis)',
+        shortName: 'D',
+        description: 'Protects against diphtheria, tetanus, and whooping cough',
+        totalDoses: 4,
+        administrationSchedule: 'At 6, 10, 14 weeks, and 15-18 months',
+        purpose: 'Prevents three serious bacterial infections',
+        sideEffects: 'Fever, fussiness, swelling at injection site',
+        doses: [
+          VaccineDose(
+            id: 'dtp_1',
+            doseNumber: 1,
+            scheduledDate: birthDate.add(const Duration(days: 42)), // 6 weeks
+            isAdministered: false,
+            ageInWeeks: 6,
+          ),
+          VaccineDose(
+            id: 'dtp_2',
+            doseNumber: 2,
+            scheduledDate: birthDate.add(const Duration(days: 70)), // 10 weeks
+            isAdministered: false,
+            ageInWeeks: 10,
+          ),
+          VaccineDose(
+            id: 'dtp_3',
+            doseNumber: 3,
+            scheduledDate: birthDate.add(const Duration(days: 98)), // 14 weeks
+            isAdministered: false,
+            ageInWeeks: 14,
+          ),
+          VaccineDose(
+            id: 'dtp_4',
+            doseNumber: 4,
+            scheduledDate: birthDate.add(const Duration(days: 455)), // 65 weeks (~15 months)
+            isAdministered: false,
+            ageInWeeks: 65,
+          ),
+        ],
+      ),
+
+      // Hib - 4 doses (at 6, 10, 14 weeks, and 12-15 months)
+      Vaccine(
+        id: 'hib',
+        name: 'Hib (Haemophilus influenzae type b)',
+        shortName: 'H',
+        description: 'Protects against Haemophilus influenzae type b',
+        totalDoses: 4,
+        administrationSchedule: 'At 6, 10, 14 weeks, and 12-15 months',
+        purpose: 'Prevents meningitis and other serious infections',
+        sideEffects: 'Redness at injection site, mild fever',
+        doses: [
+          VaccineDose(
+            id: 'hib_1',
+            doseNumber: 1,
+            scheduledDate: birthDate.add(const Duration(days: 42)), // 6 weeks
+            isAdministered: false,
+            ageInWeeks: 6,
+          ),
+          VaccineDose(
+            id: 'hib_2',
+            doseNumber: 2,
+            scheduledDate: birthDate.add(const Duration(days: 70)), // 10 weeks
+            isAdministered: false,
+            ageInWeeks: 10,
+          ),
+          VaccineDose(
+            id: 'hib_3',
+            doseNumber: 3,
+            scheduledDate: birthDate.add(const Duration(days: 98)), // 14 weeks
+            isAdministered: false,
+            ageInWeeks: 14,
+          ),
+          VaccineDose(
+            id: 'hib_4',
+            doseNumber: 4,
+            scheduledDate: birthDate.add(const Duration(days: 364)), // 52 weeks (~12 months)
+            isAdministered: false,
+            ageInWeeks: 52,
+          ),
+        ],
+      ),
+
+      // PCV - 4 doses (at 6, 10, 14 weeks, and 12-15 months)
+      Vaccine(
+        id: 'pcv',
+        name: 'PCV (Pneumococcal Conjugate Vaccine)',
+        shortName: 'P',
+        description: 'Protects against pneumococcal disease',
+        totalDoses: 4,
+        administrationSchedule: 'At 6, 10, 14 weeks, and 12-15 months',
+        purpose: 'Prevents pneumonia, meningitis, and blood infections',
+        sideEffects: 'Drowsiness, loss of appetite, redness at injection site',
+        doses: [
+          VaccineDose(
+            id: 'pcv_1',
+            doseNumber: 1,
+            scheduledDate: birthDate.add(const Duration(days: 42)), // 6 weeks
+            isAdministered: false,
+            ageInWeeks: 6,
+          ),
+          VaccineDose(
+            id: 'pcv_2',
+            doseNumber: 2,
+            scheduledDate: birthDate.add(const Duration(days: 70)), // 10 weeks
+            isAdministered: false,
+            ageInWeeks: 10,
+          ),
+          VaccineDose(
+            id: 'pcv_3',
+            doseNumber: 3,
+            scheduledDate: birthDate.add(const Duration(days: 98)), // 14 weeks
+            isAdministered: false,
+            ageInWeeks: 14,
+          ),
+          VaccineDose(
+            id: 'pcv_4',
+            doseNumber: 4,
+            scheduledDate: birthDate.add(const Duration(days: 364)), // 52 weeks
+            isAdministered: false,
+            ageInWeeks: 52,
+          ),
+        ],
+      ),
+    ];
   }
 
   // Generate vaccine schedule based on child's age

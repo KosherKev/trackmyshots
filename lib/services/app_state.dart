@@ -83,16 +83,33 @@ class AppState extends ChangeNotifier {
       if (hasData) {
         await _loadFromStorage();
       } else {
-        loadSampleData();
-        await _saveToStorage();
+        // Do NOT load sample data automatically for production flow
+        // The UI will detect _currentChild == null and show onboarding
+        // loadSampleData(); // Commented out for real flow
+        // await _saveToStorage();
       }
     } catch (e) {
       print('Error initializing app: $e');
-      loadSampleData();
+      // On error, maybe we should safe fail, but for now let's just leave it empty
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // Complete onboarding
+  Future<void> completeOnboarding(ChildProfile child) async {
+    _currentChild = child;
+    
+    // Generate vaccine schedule based on child's age
+    // For now, we reuse the sample data logic but this should ideally be a dedicated generator
+    _vaccines = SampleDataService.generateScheduleForChild(child);
+    
+    // Initialize empty appointments
+    _appointments = [];
+    
+    notifyListeners();
+    await _saveToStorage();
   }
 
   // Load from storage

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:trackmyshots/services/app_state.dart';
 import 'package:trackmyshots/theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -16,9 +18,23 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 3));
+    // Wait for AppState to initialize
+    final appState = Provider.of<AppState>(context, listen: false);
+    
+    // Simple delay for splash effect
+    await Future.delayed(const Duration(seconds: 2));
+    
+    // Wait until loading is done
+    while (appState.isLoading) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    
     if (mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
+      if (appState.currentChild == null) {
+        Navigator.pushReplacementNamed(context, '/onboarding');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     }
   }
 
@@ -30,11 +46,11 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // TODO: Add app logo/icon here
-            Icon(
-              Icons.vaccines,
-              size: 100,
-              color: AppTheme.primaryBlue,
+            // App Logo
+            Image.asset(
+              'assets/images/logo.png',
+              width: 150,
+              height: 150,
             ),
             const SizedBox(height: 24),
             Text(
